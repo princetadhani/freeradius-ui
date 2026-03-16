@@ -51,11 +51,21 @@ def save():
     path = data.get('filepath')
     content = data.get('content')
     full_path = os.path.join(BASE_DIR, path)
+    # In your /save route:
     try:
         with open(full_path, 'w') as f:
             f.write(content)
-        os.system("sudo systemctl restart freeradius")
+
+        # Check config syntax first
+        check = subprocess.run(["sudo", "freeradius", "-C"], capture_output=True)
+        print(check)
+        if check.returncode != 0:
+            print("Error")
+            return jsonify({"status": "error", "message": "Config test failed! Revert changes."}), 400
+
+        subprocess.run(["sudo", "systemctl", "restart", "freeradius"])
         return jsonify({"status": "success"})
+    # ADD THIS BLOCK BELOW
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
