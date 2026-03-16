@@ -333,6 +333,8 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/shell/shell.min.js"></script>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
 
 
     <script>
@@ -529,24 +531,44 @@
         }
 
 
-        function saveFile() {
+        // Function to trigger the Bootstrap Toast
+        function showToast(message, isError = false) {
+            const toastEl = document.getElementById('statusToast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            // Set text and colors based on success/error
+            toastMessage.textContent = message;
+            if (isError) {
+                toastEl.className = 'toast align-items-center text-bg-danger border-0';
+            } else {
+                toastEl.className = 'toast align-items-center text-bg-success border-0';
+            }
 
+            // Initialize and show
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
+        }
+
+        function saveFile() {
             if (!confirm("Save changes and restart service?")) return;
 
             fetch('/save', {
-
                 method: 'POST',
-
                 headers: { 'Content-Type': 'application/json' },
-
                 body: JSON.stringify({ filepath: currentPath, content: editor.getValue() })
-
-            }).then(res => res.json()).then(data => {
-
-                if (data.status === 'success') alert("Saved! FreeRADIUS restarted.");
-
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showToast("Saved! FreeRADIUS successfully restarted.", false);
+                } else {
+                    // Show the error message sent from your Python backend!
+                    showToast(data.message || "An unknown error occurred.", true);
+                }
+            })
+            .catch(error => {
+                showToast("Network error or server is unreachable.", true);
             });
-
         }
 
 
@@ -573,6 +595,16 @@
         updateRadiusStatus();
         setInterval(updateRadiusStatus, 5000);
     </script>
+
+    <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3 mt-3" style="z-index: 1080;">
+        <div id="statusToast" class="toast align-items-center border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body fs-6" id="toastMessage" style="font-weight: 500;">
+                    </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
 
 </body>
 
