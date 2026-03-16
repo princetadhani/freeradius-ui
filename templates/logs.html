@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+
+body{
+height:100vh;
+display:flex;
+flex-direction:column;
+}
+
+#logViewer{
+
+flex-grow:1;
+overflow:auto;
+background:#111;
+color:#ddd;
+font-family:monospace;
+padding:10px;
+white-space:pre;
+}
+
+.error{color:#ff5c5c;}
+.warn{color:#ffb347;}
+.accept{color:#7CFC00;}
+.request{color:#00bfff;}
+
+</style>
+
+</head>
+
+<body>
+
+<nav class="navbar navbar-light bg-light px-3">
+
+<span class="fw-bold">FreeRADIUS Logs</span>
+
+<div class="ms-auto d-flex gap-2">
+
+<input id="searchBox" class="form-control form-control-sm" placeholder="Search">
+
+<button class="btn btn-sm btn-outline-primary" onclick="loadLogs()">Refresh</button>
+
+<button id="liveBtn" class="btn btn-sm btn-success" onclick="toggleLive()">Live</button>
+
+<button class="btn btn-sm btn-secondary" onclick="scrollBottom()">Bottom</button>
+
+<a href="/" class="btn btn-sm btn-outline-dark">Back</a>
+
+</div>
+
+</nav>
+
+<div id="logViewer"></div>
+
+<script>
+
+let offset = 0
+let live = false
+let interval = null
+
+const viewer = document.getElementById("logViewer")
+
+let logBuffer = []
+
+function colorize(line){
+
+if(line.includes("Access-Reject")) return `<span class="error">${line}</span>`
+if(line.includes("WARNING")) return `<span class="warn">${line}</span>`
+if(line.includes("Access-Accept")) return `<span class="accept">${line}</span>`
+if(line.includes("Access-Request")) return `<span class="request">${line}</span>`
+
+return line
+
+}
+
+
+/* STREAM STYLE APPEND */
+
+function appendLogs(text){
+
+const search = document.getElementById("searchBox").value.toLowerCase()
+
+if(text.trim() === ""){
+viewer.innerHTML += "\n"
+return
+}
+
+const lines = text.split("\n")
+
+lines.forEach(line => {
+
+if(line.trim() === "") return
+
+logBuffer.push(line)
+
+if(search && !line.toLowerCase().includes(search)) return
+
+viewer.innerHTML += colorize(line) + "\n"
+
+})
+
+}
+
+
+/* FETCH LOGS */
+
+function loadLogs(){
+
+fetch(`/logs/tail?offset=${offset}`)
+.then(r => r.json())
+.then(data => {
+
+appendLogs(data.content)
+
+offset = data.offset
+
+if(live) scrollBottom()
+
+})
+
+}
+
+
+/* SCROLL */
+
+function scrollBottom(){
+viewer.scrollTop = viewer.scrollHeight
+}
+
+
+/* LIVE MODE */
+
+function toggleLive(){
+
+live = !live
+
+const btn = document.getElementById("liveBtn")
+
+if(live){
+
+btn.textContent="Pause"
+btn.classList.replace("btn-success","btn-danger")
+
+interval=setInterval(loadLogs,1500)
+
+}else{
+
+btn.textContent="Live"
+btn.classList.replace("btn-danger","btn-success")
+
+clearInterval(interval)
+
+}
+
+}
+
+
+/* SEARCH REBUILD */
+
+document.getElementById("searchBox").addEventListener("input", function(){
+
+viewer.innerHTML = ""
+
+const search = this.value.toLowerCase()
+
+logBuffer.forEach(line => {
+
+if(search && !line.toLowerCase().includes(search)) return
+
+viewer.innerHTML += colorize(line) + "\n"
+
+})
+
+})
+
+
+/* INITIAL LOAD */
+
+loadLogs()
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,34 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+
+textarea {
+    width: 100%;
+    height: 500px;
+    font-family: monospace;
+    font-size: 14px;
+}
+
+.buttons a {
+    margin-right: 10px;
+    text-decoration: none;
+    color: blue;
+}
+
+.buttons a:hover {
+    text-decoration: underline;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+li.success { color: green; }
+li.danger { color: red; }
+
+button {
+    margin-top: 10px;
+    padding: 10px 20px;
+}

@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+
+<html lang="en" data-bs-theme="light">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>FreeRadius Editor</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/material-darker.min.css">
+
+
+
+    <style>
+        body {
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Inter', sans-serif;
+            background: #fff;
+        }
+
+
+        /* Navbar & Sidebar */
+
+        .navbar {
+            background: #fff;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 0.5rem 1rem;
+            z-index: 1000;
+        }
+
+        .main-layout {
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: #ffffff;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            transition: margin-left 0.2s;
+        }
+
+        .sidebar.collapsed {
+            margin-left: -280px;
+        }
+
+
+
+        .search-box {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .search-box input {
+            font-size: 12px;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+
+
+        .explorer {
+            overflow-y: auto;
+            flex-grow: 1;
+            padding: 5px 0;
+        }
+
+        .tree-node {
+            padding-left: 10px;
+        }
+
+        .folder-header,
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #444;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 0 4px;
+        }
+
+        .folder-header:hover,
+        .file-item:hover {
+            background: #f0f0f0;
+        }
+
+        .file-item.active {
+            background: #0078d4 !important;
+            color: #ffffff !important;
+        }
+
+
+
+        .folder-header::before {
+            content: '▸';
+            margin-right: 6px;
+            transition: transform 0.2s;
+            display: inline-block;
+            font-size: 10px;
+        }
+
+        .folder-header.open::before {
+            transform: rotate(90deg);
+        }
+
+        .folder-content {
+            display: none;
+        }
+
+        .folder-content.open {
+            display: block;
+        }
+
+
+
+        /* Editor Area */
+
+        .editor-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+            position: relative;
+        }
+
+        .CodeMirror {
+            flex-grow: 1;
+            height: 100% !important;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            border: none;
+        }
+
+
+
+        /* Custom Color Scheme */
+
+        .cm-s-default .cm-comment,
+        .cm-s-material-darker .cm-comment {
+            color: #228B22 !important;
+            font-style: normal;
+        }
+
+        /* Green */
+
+        .cm-s-default .cm-string,
+        .cm-s-material-darker .cm-string {
+            color: #A52A2A !important;
+        }
+
+        /* Brown/Red */
+
+        .cm-s-default .cm-keyword,
+        .cm-s-material-darker .cm-keyword {
+            color: #0000FF !important;
+        }
+
+        /* Blue */
+
+
+        /* Dark Mode Fixes */
+
+        [data-bs-theme="dark"] body,
+        [data-bs-theme="dark"] .sidebar,
+        [data-bs-theme="dark"] .navbar {
+            background: #1e1e1e !important;
+            color: #ccc;
+            border-color: #333;
+        }
+
+        [data-bs-theme="dark"] .search-box input {
+            background: #2d2d2d;
+            border-color: #444;
+            color: #fff;
+        }
+
+        [data-bs-theme="dark"] .folder-header,
+        [data-bs-theme="dark"] .file-item {
+            color: #aaa;
+        }
+
+        [data-bs-theme="dark"] .folder-header:hover,
+        [data-bs-theme="dark"] .file-item:hover {
+            background: #2d2d2d;
+        }
+
+        [data-bs-theme="dark"] .status-bar {
+            background: #252526;
+            border-color: #333;
+        }
+
+
+
+        .status-bar {
+            padding: 6px 15px;
+            background: #f8f9fa;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+
+
+    <nav class="navbar">
+
+        <div class="d-flex align-items-center w-100">
+
+            <button class="btn btn-sm btn-light border-0 me-2" id="sidebarToggle">☰</button>
+
+            <span class="fw-bold text-dark-emphasis">⚡ FreeRADIUS</span>
+            <span id="radiusStatus" class="badge bg-secondary ms-3">
+                Checking...
+            </span>
+
+            <div class="ms-auto d-flex gap-2 align-items-center">
+
+                <!-- Logs Viewer -->
+                <a href="/logs" class="btn btn-sm btn-outline-secondary">
+                    📜 Logs
+                </a>
+
+                <!-- CoA Manager -->
+                <a href="/coa" class="btn btn-sm btn-outline-secondary">
+                    ⚡ CoA Manager
+                </a>
+
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-primary active" id="viewBtn" onclick="setMode('view')">View</button>
+                    <button class="btn btn-outline-primary" id="editBtn" onclick="setMode('edit')">Edit</button>
+                </div>
+
+                <button class="btn btn-sm btn-light border" id="themeToggle">🌓</button>
+
+            </div>
+
+        </div>
+
+    </nav>
+
+
+
+    <div class="main-layout">
+
+        <aside class="sidebar" id="sidebar">
+
+            <div class="search-box">
+
+                <input type="text" id="fileSearch" class="form-control form-control-sm" placeholder="Search files...">
+
+            </div>
+
+            <div class="explorer" id="explorer">
+
+                {% macro render_tree(nodes) %}
+
+                {% for node in nodes %}
+
+                <div class="tree-node" data-name="{{ node.name.lower() }}">
+
+                    {% if node.is_dir %}
+
+                    <div class="folder-header" onclick="manualToggle(this)">📁 {{ node.name }}</div>
+
+                    <div class="folder-content" data-user-expanded="false">{{ render_tree(node.children) }}</div>
+
+                    {% else %}
+
+                    <div class="file-item" onclick="loadFile('{{ node.path }}', this)">📄 {{ node.name }}</div>
+
+                    {% endif %}
+
+                </div>
+
+                {% endfor %}
+
+                {% endmacro %}
+
+                {{ render_tree(structure) }}
+
+            </div>
+
+        </aside>
+
+
+
+        <main class="editor-container">
+
+            <textarea id="editor"></textarea>
+
+            <div class="status-bar">
+
+                <div class="d-flex gap-3">
+                    <div id="currentFilePath" class="text-muted">/etc/freeradius/3.0/</div>
+                    <div id="modeIndicator"><span class="text-success">👁 Mode: VIEW</span></div>
+                </div>
+
+                <button id="saveBtn" class="btn btn-success btn-sm d-none" onclick="saveFile()">Save & Restart</button>
+
+            </div>
+        </main>
+
+    </div>
+
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/shell/shell.min.js"></script>
+
+
+
+    <script>
+        function updateRadiusStatus() {
+
+            fetch('/radius_status')
+                .then(res => res.json())
+                .then(data => {
+
+                    const badge = document.getElementById("radiusStatus");
+                    if (data.status === "running") {
+
+                        badge.className = "badge bg-success ms-3";
+                        badge.textContent = "🟢 RUNNING";
+
+                    } else if (data.status === "failed") {
+
+                        badge.className = "badge bg-warning text-dark ms-3";
+                        badge.textContent = "🟠 FAILED";
+
+                    } else if (data.status === "stopped") {
+
+                        badge.className = "badge bg-danger ms-3";
+                        badge.textContent = "🔴 STOPPED";
+                    }
+
+                    else {
+
+                        badge.className = "badge bg-secondary ms-3";
+                        badge.textContent = "UNKNOWN";
+                    }
+
+                })
+                .catch(() => {
+
+                    const badge = document.getElementById("radiusStatus");
+                    badge.className = "badge bg-secondary ms-3";
+                    badge.textContent = "ERROR";
+
+                });
+        }
+        let currentPath = "";
+
+        let currentMode = "view";
+
+
+
+        const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
+
+            lineNumbers: true, mode: "shell", readOnly: true, viewportMargin: Infinity
+
+        });
+        setMode("view");
+
+
+        function manualToggle(header) {
+
+            const content = header.nextElementSibling;
+
+            const isOpen = header.classList.toggle('open');
+
+            content.classList.toggle('open', isOpen);
+
+            content.setAttribute('data-user-expanded', isOpen);
+
+        }
+
+
+
+        function loadFile(path, el) {
+
+            fetch(`/get_file_content?path=${path}`)
+
+                .then(res => res.json())
+
+                .then(data => {
+
+                    editor.setValue(data.content);
+
+                    currentPath = data.path;
+
+                    document.getElementById('currentFilePath').textContent = `/etc/freeradius/3.0/${currentPath}`;
+
+                    document.querySelectorAll('.file-item').forEach(i => i.classList.remove('active'));
+
+                    el.classList.add('active');
+
+                    setMode(currentMode);
+
+                });
+
+        }
+
+
+
+        // VS Code Style Search Logic
+
+        document.getElementById('fileSearch').addEventListener('input', function (e) {
+
+            const term = e.target.value.toLowerCase();
+
+            document.querySelectorAll('.tree-node').forEach(node => {
+
+                if (term === "") {
+
+                    node.style.display = "block";
+
+                    const content = node.querySelector('.folder-content');
+
+                    if (content) {
+
+                        const wasUserExpanded = content.getAttribute('data-user-expanded') === "true";
+
+                        node.querySelector('.folder-header').classList.toggle('open', wasUserExpanded);
+
+                        content.classList.toggle('open', wasUserExpanded);
+
+                    }
+
+                } else { node.style.display = "none"; }
+
+            });
+
+            if (term !== "") {
+
+                document.querySelectorAll('.file-item, .folder-header').forEach(item => {
+
+                    if (item.textContent.toLowerCase().includes(term)) {
+
+                        let node = item.closest('.tree-node');
+
+                        node.style.display = "block";
+
+                        let parent = node.parentElement.closest('.tree-node');
+
+                        while (parent) {
+
+                            parent.style.display = "block";
+
+                            parent.querySelector('.folder-header').classList.add('open');
+
+                            parent.querySelector('.folder-content').classList.add('open');
+
+                            parent = parent.parentElement.closest('.tree-node');
+
+                        }
+
+                    }
+
+                });
+
+            }
+
+        });
+
+
+
+        // function setMode(mode) {
+
+        //     currentMode = mode;
+
+        //     const isEdit = mode === 'edit';
+
+        //     editor.setOption('readOnly', !isEdit);
+
+        //     document.getElementById('viewBtn').className = isEdit ? 'btn btn-outline-primary' : 'btn btn-primary active';
+
+        //     document.getElementById('editBtn').className = isEdit ? 'btn btn-primary active' : 'btn btn-outline-primary';
+
+        //     document.getElementById('saveBtn').classList.toggle('d-none', !isEdit || !currentPath);
+
+        // }
+        function setMode(mode) {
+
+            currentMode = mode;
+
+            const isEdit = mode === 'edit';
+
+            editor.setOption('readOnly', !isEdit);
+
+            document.getElementById('viewBtn').className =
+                isEdit ? 'btn btn-outline-primary' : 'btn btn-primary active';
+
+            document.getElementById('editBtn').className =
+                isEdit ? 'btn btn-primary active' : 'btn btn-outline-primary';
+
+            document.getElementById('saveBtn')
+                .classList.toggle('d-none', !isEdit || !currentPath);
+
+            document.getElementById('modeIndicator').innerHTML =
+                isEdit
+                    ? '<span class="text-danger">✏️ Mode: EDIT</span>'
+                    : '<span class="text-success">👁 Mode: VIEW</span>';
+        }
+
+
+        function saveFile() {
+
+            if (!confirm("Save changes and restart service?")) return;
+
+            fetch('/save', {
+
+                method: 'POST',
+
+                headers: { 'Content-Type': 'application/json' },
+
+                body: JSON.stringify({ filepath: currentPath, content: editor.getValue() })
+
+            }).then(res => res.json()).then(data => {
+
+                if (data.status === 'success') alert("Saved! FreeRADIUS restarted.");
+
+            });
+
+        }
+
+
+
+        // Sidebar & Theme Toggles
+
+        document.getElementById('sidebarToggle').onclick = () => document.getElementById('sidebar').classList.toggle('collapsed');
+
+
+        function setTheme(t) {
+
+            document.documentElement.setAttribute('data-bs-theme', t);
+
+            editor.setOption('theme', t === 'dark' ? 'material-darker' : 'default');
+
+            localStorage.setItem('fr-theme', t);
+
+        }
+
+        document.getElementById('themeToggle').onclick = () => setTheme(document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark');
+
+        setTheme(localStorage.getItem('fr-theme') || 'light');
+
+        updateRadiusStatus();
+        setInterval(updateRadiusStatus, 5000);
+    </script>
+
+</body>
+
+</html>
