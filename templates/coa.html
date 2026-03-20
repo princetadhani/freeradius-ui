@@ -1,178 +1,293 @@
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="light">
+
 <head>
     <meta charset="UTF-8">
     <title>CoA Manager</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        body { height: 100vh; overflow: hidden; display: flex; flex-direction: column; font-family: 'Inter', sans-serif; background: #f8f9fa; }
-        .navbar { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 0.5rem 1rem; z-index: 1000; }
-        .main-layout { display: flex; flex-grow: 1; overflow: hidden; }
-        .sidebar { width: 280px; background: #ffffff; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; transition: margin-left 0.2s; }
-        .sidebar.collapsed { margin-left: -280px; }
-        .explorer { overflow-y: auto; flex-grow: 1; padding: 10px 0; }
-        .file-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 15px; cursor: pointer; font-size: 13px; color: #444; border-radius: 4px; margin: 0 8px; }
-        .file-item:hover { background: #f0f0f0; }
-        .file-item.active { background: #e7f3ff; color: #0078d4; font-weight: 600; border: 1px solid #b3d7ff; }
-        .delete-btn { color: #dc3545; opacity: 0; transition: opacity 0.2s; }
-        .file-item:hover .delete-btn { opacity: 1; }
-        .content-area { flex-grow: 1; padding: 20px; overflow-y: auto; }
-        .console { background: #1e1e1e; color: #00ff00; padding: 15px; font-family: monospace; border-radius: 5px; height: 210px; overflow-y: auto; white-space: pre-wrap; font-size: 13px; margin-top: 10px; border: 1px solid #333; }
-        .card { border: none; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); }
+        body {
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Inter', sans-serif;
+            background: #f8f9fa;
+        }
+
+        .navbar {
+            background: #fff;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 0.5rem 1rem;
+            z-index: 1000;
+        }
+
+        .main-layout {
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: #ffffff;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            transition: margin-left 0.2s;
+        }
+
+        .sidebar.collapsed {
+            margin-left: -280px;
+        }
+
+        .explorer {
+            overflow-y: auto;
+            flex-grow: 1;
+            padding: 10px 0;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #444;
+            border-radius: 4px;
+            margin: 0 8px;
+        }
+
+        .file-item:hover {
+            background: #f0f0f0;
+        }
+
+        .file-item.active {
+            background: #e7f3ff;
+            color: #0078d4;
+            font-weight: 600;
+            border: 1px solid #b3d7ff;
+        }
+
+        .delete-btn {
+            color: #dc3545;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .file-item:hover .delete-btn {
+            opacity: 1;
+        }
+
+        .content-area {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .console {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            font-family: monospace;
+            border-radius: 5px;
+            height: 210px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-size: 13px;
+            margin-top: 10px;
+            border: 1px solid #333;
+        }
+
+        .card {
+            border: none;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
     </style>
 </head>
+
 <body>
 
-<nav class="navbar">
-    <div class="d-flex align-items-center w-100">
-        <button class="btn btn-sm btn-light border-0 me-2" id="sidebarToggle">☰</button>
-        <span class="fw-bold text-dark-emphasis">📡 CoA & Disconnect Manager</span>
-        <div class="ms-auto">
-            <a href="/" class="btn btn-sm btn-outline-primary text-decoration-none">⬅ Back to Editor</a>
+    <nav class="navbar">
+        <div class="d-flex align-items-center w-100">
+            <button class="btn btn-sm btn-light border-0 me-2" id="sidebarToggle">☰</button>
+            <span class="fw-bold text-dark-emphasis">📡 CoA & Disconnect Manager</span>
+            <div class="ms-auto">
+                <a href="/" class="btn btn-sm btn-outline-primary text-decoration-none">⬅ Back to Editor</a>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
-<div class="main-layout">
-    <aside class="sidebar" id="sidebar">
-        <div class="px-3 py-2 border-bottom small fw-bold text-muted text-uppercase">Saved CoA files</div>
-        <div class="explorer" id="coaExplorer">
-            {% for node in structure %}
+    <div class="main-layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="px-3 py-2 border-bottom small fw-bold text-muted text-uppercase">Saved CoA files</div>
+            <div class="explorer" id="coaExplorer">
+                {% for node in structure %}
                 <div class="file-item" data-filename="{{ node.name }}" onclick="selectCoaFile('{{ node.name }}', this)">
                     <span>📄 {{ node.name }}</span>
                     <span class="delete-btn" title="Delete" onclick="deleteCoA('{{ node.name }}', event)">🗑️</span>
                 </div>
-            {% endfor %}
-        </div>
-    </aside>
+                {% endfor %}
+            </div>
+        </aside>
 
-    <main class="content-area">
-        <div class="row">
-            <div class="col-md-5">
-                <div class="card mb-4">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
-                        <span class="fw-bold text-primary">Edit Attributes</span>
-                        <button class="btn btn-sm btn-success py-0 px-2" style="font-size: 11px;" onclick="createNewFile()">+ New File</button>
-                    </div>
-                    <div class="card-body">
-                        <label class="small text-muted mb-1">Filename</label>
-                        <input type="text" id="fileName" class="form-control mb-2" placeholder="e.g. coa1">
-                        <label class="small text-muted mb-1">Packet Contents</label>
-                        <textarea id="fileContent" class="form-control" rows="11" placeholder="User-Name = 'test'...."></textarea>
-                        <button class="btn btn-success w-100 mt-3" onclick="saveCoA()">Save File</button>
+        <main class="content-area">
+            <div class="row">
+                <div class="col-md-5">
+                    <div class="card mb-4">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
+                            <span class="fw-bold text-primary">Edit Attributes</span>
+                            <button class="btn btn-sm btn-success py-0 px-2" style="font-size: 11px;"
+                                onclick="createNewFile()">+ New File</button>
+                        </div>
+                        <div class="card-body">
+                            <label class="small text-muted mb-1">Filename</label>
+                            <input type="text" id="fileName" class="form-control mb-2" placeholder="e.g. coa1">
+                            <label class="small text-muted mb-1">Packet Contents</label>
+                            <textarea id="fileContent" class="form-control" rows="11"
+                                placeholder="User-Name = 'test'...."></textarea>
+                            <button class="btn btn-success w-100 mt-3" onclick="saveCoA()">Save File</button>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="col-md-7">
-                <div class="card mb-3">
-                    <div class="card-header bg-white fw-bold text-danger">Execute Command</div>
-                    <div class="card-body">
-                        <div class="row g-2 mb-3">
-                            <div class="col-md-4">
-                                <label class="small fw-bold">NAS IP Address</label>
-                                <input type="text" id="nasIp" class="form-control" value="10.86.203.18">
+                <div class="col-md-7">
+                    <div class="card mb-3">
+                        <div class="card-header bg-white fw-bold text-danger">Execute Command</div>
+                        <div class="card-body">
+                            <div class="row g-2 mb-3">
+                                <div class="col-md-4">
+                                    <label class="small fw-bold">NAS IP Address</label>
+                                    <input type="text" id="nasIp" class="form-control" value="10.86.203.18">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="small fw-bold">Shared Secret</label>
+                                    <input type="text" id="secret" class="form-control" value="prince">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="small fw-bold">Request Type</label>
+                                    <select id="requestType" class="form-select">
+                                        <option value="coa">CoA</option>
+                                        <option value="disconnect">Disconnect</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div class="col-md-4">
-                                <label class="small fw-bold">Shared Secret</label>
-                                <input type="text" id="secret" class="form-control" value="prince">
+                            <div
+                                class="p-2 mb-3 bg-light border rounded small d-flex justify-content-between align-items-center">
+                                <span>CoA File Use For Command Argument: <strong id="selectedDisplay"
+                                        class="text-primary">None</strong></span>
                             </div>
-                            <div class="col-md-4">
-                                <label class="small fw-bold">Request Type</label>
-                                <select id="requestType" class="form-select">
-                                    <option value="coa">CoA</option>
-                                    <option value="disconnect">Disconnect</option>
-                                </select>
-                            </div>
+                            <input type="hidden" id="selectedFileName">
+                            <button class="btn btn-danger w-100 fw-bold py-2" id="sendBtn" onclick="sendCoA()" disabled>
+                                Send Packet
+                            </button>
                         </div>
-                        <div class="p-2 mb-3 bg-light border rounded small d-flex justify-content-between align-items-center">
-                            <span>CoA File Use For Command Argument: <strong id="selectedDisplay" class="text-primary">None</strong></span>
-                        </div>
-                        <input type="hidden" id="selectedFileName">
-                        <button class="btn btn-danger w-100 fw-bold py-2" id="sendBtn" onclick="sendCoA()" disabled>
-                             Send Packet
-                        </button>
                     </div>
+                    <div class="fw-bold small text-muted px-1">TERMINAL OUTPUT</div>
+                    <div id="output" class="console">System ready. Select a file to send or create a new one.</div>
                 </div>
-                <div class="fw-bold small text-muted px-1">TERMINAL OUTPUT</div>
-                <div id="output" class="console">System ready. Select a file to send or create a new one.</div>
             </div>
-        </div>
-    </main>
-</div>
+        </main>
+    </div>
 
-<script>
-    document.getElementById('sidebarToggle').onclick = () => document.getElementById('sidebar').classList.toggle('collapsed');
+    <script>
+        document.getElementById('sidebarToggle').onclick = () => document.getElementById('sidebar').classList.toggle('collapsed');
 
-    function createNewFile() {
-        document.querySelectorAll('.file-item').forEach(i => i.classList.remove('active'));
-        document.getElementById('fileName').value = "";
-        document.getElementById('fileContent').value = "";
-        document.getElementById('selectedFileName').value = "";
-        document.getElementById('selectedDisplay').innerText = "None (Creating new)";
-        document.getElementById('sendBtn').disabled = true;
-        document.getElementById('output').textContent = "Ready to create new file.";
-        document.getElementById('fileName').focus();
-    }
+        window.onload = function () {
+            const nasIp = localStorage.getItem("nasIp");
+            const secret = localStorage.getItem("secret");
 
-    function selectCoaFile(name, el) {
-        document.querySelectorAll('.file-item').forEach(i => i.classList.remove('active'));
-        el.classList.add('active');
-        document.getElementById('fileName').value = name.replace('.txt', '');
-        document.getElementById('selectedFileName').value = name;
-        document.getElementById('selectedDisplay').innerText = name;
-        document.getElementById('sendBtn').disabled = false;
-        document.getElementById('sendBtn').innerHTML = `🚀 Send <strong>${name}</strong>`;
+            if (nasIp) document.getElementById("nasIp").value = nasIp;
+            if (secret) document.getElementById("secret").value = secret;
 
-        fetch(`/get_file_content?path=coa/${name}`)
-            .then(res => res.json()).then(data => {
-                document.getElementById('fileContent').value = data.content;
-                document.getElementById('output').textContent = `Loaded ${name} for execution.`;
-            });
-    }
-
-    function saveCoA() {
-        const name = document.getElementById('fileName').value;
-        if(!name) return alert("Please enter a filename!");
-        fetch('/coa/save', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({filename: name, content: document.getElementById('fileContent').value})
-        }).then(res => res.json()).then(data => {
-            if(data.status === 'success') {
-                alert(`Success: ${name}.txt saved.`);
-                location.reload();
+            if (nasIp || secret) {
+                document.getElementById('output').textContent = "Restored previous session values.";
             }
+        };
+
+        ["nasIp", "secret"].forEach(id => {
+            document.getElementById(id).addEventListener("input", (e) => {
+                localStorage.setItem(id, e.target.value);
+            });
         });
-    }
-
-    function sendCoA() {
-        const file = document.getElementById('selectedFileName').value;
-        const type = document.getElementById('requestType').value;
-        const outputDiv = document.getElementById('output');
-        outputDiv.textContent = `>>> Processing ${type.toUpperCase()} request...`;
-
-        fetch('/coa/send', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                filename: file,
-                nas_ip: document.getElementById('nasIp').value,
-                secret: document.getElementById('secret').value,
-                req_type: type
-            })
-        }).then(res => res.json()).then(data => {
-            outputDiv.textContent = data.output || data.error || "Execution finished.";
-        });
-    }
-
-    function deleteCoA(filename, event) {
-        event.stopPropagation();
-        if(confirm(`Permanent delete ${filename}?`)) {
-            fetch(`/coa/delete/${filename}`, { method: 'DELETE' }).then(() => location.reload());
+        function createNewFile() {
+            document.querySelectorAll('.file-item').forEach(i => i.classList.remove('active'));
+            document.getElementById('fileName').value = "";
+            document.getElementById('fileContent').value = "";
+            document.getElementById('selectedFileName').value = "";
+            document.getElementById('selectedDisplay').innerText = "None (Creating new)";
+            document.getElementById('sendBtn').disabled = true;
+            document.getElementById('output').textContent = "Ready to create new file.";
+            document.getElementById('fileName').focus();
         }
-    }
-</script>
+
+        function selectCoaFile(name, el) {
+            document.querySelectorAll('.file-item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('fileName').value = name.replace('.txt', '');
+            document.getElementById('selectedFileName').value = name;
+            document.getElementById('selectedDisplay').innerText = name;
+            document.getElementById('sendBtn').disabled = false;
+            document.getElementById('sendBtn').innerHTML = `🚀 Send <strong>${name}</strong>`;
+
+            fetch(`/get_file_content?path=coa/${name}`)
+                .then(res => res.json()).then(data => {
+                    document.getElementById('fileContent').value = data.content;
+                    document.getElementById('output').textContent = `Loaded ${name} for execution.`;
+                });
+        }
+
+        function saveCoA() {
+            const name = document.getElementById('fileName').value;
+            if (!name) return alert("Please enter a filename!");
+            fetch('/coa/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filename: name, content: document.getElementById('fileContent').value })
+            }).then(res => res.json()).then(data => {
+                if (data.status === 'success') {
+                    alert(`Success: ${name}.txt saved.`);
+                    location.reload();
+                }
+            });
+        }
+
+        function sendCoA() {
+            const file = document.getElementById('selectedFileName').value;
+            const type = document.getElementById('requestType').value;
+            const nasIp = document.getElementById('nasIp').value;
+            const secret = document.getElementById('secret').value;
+
+            // ✅ Save again (safety)
+            localStorage.setItem("nasIp", nasIp);
+            localStorage.setItem("secret", secret);
+
+            const outputDiv = document.getElementById('output');
+            outputDiv.textContent = `>>> Processing ${type.toUpperCase()} request...`;
+
+            fetch('/coa/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    filename: file,
+                    nas_ip: nasIp,
+                    secret: secret,
+                    req_type: type
+                })
+            }).then(res => res.json()).then(data => {
+                outputDiv.textContent = data.output || data.error || "Execution finished.";
+            });
+        }
+
+        function deleteCoA(filename, event) {
+            event.stopPropagation();
+            if (confirm(`Permanent delete ${filename}?`)) {
+                fetch(`/coa/delete/${filename}`, { method: 'DELETE' }).then(() => location.reload());
+            }
+        }
+    </script>
 </body>
+
 </html>
