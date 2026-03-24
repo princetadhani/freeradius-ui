@@ -105,6 +105,70 @@
             border: none;
             box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
         }
+
+        /* Custom Editor Styling */
+        .editor-wrapper {
+            position: relative;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            background: #fff;
+            height: 275px;
+            overflow: hidden;
+        }
+
+        .editor-backdrop {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 0.375rem 0.75rem;
+            font-family: inherit;
+            font-size: 1rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: #212529;
+            /* Standard text color */
+            pointer-events: none;
+            /* Let clicks pass through to textarea */
+            overflow-y: auto;
+            z-index: 1;
+        }
+
+        .editor-backdrop .comment {
+            color: #adb5bd;
+            /* Muted gray */
+            text-decoration: line-through;
+            font-style: italic;
+        }
+
+        .editor-textarea {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 0.375rem 0.75rem;
+            font-family: inherit;
+            font-size: 1rem;
+            line-height: 1.5;
+            background: transparent !important;
+            color: transparent !important;
+            /* Hide native text, show background */
+            caret-color: #000;
+            /* Keep the blinking cursor visible */
+            border: none;
+            resize: none;
+            outline: none;
+            z-index: 2;
+        }
+
+        .editor-textarea::selection {
+            background-color: rgba(13, 110, 253, 0.25);
+            /* Bootstrap primary selection */
+            color: transparent;
+        }
     </style>
 </head>
 
@@ -146,8 +210,11 @@
                             <label class="small text-muted mb-1">Filename</label>
                             <input type="text" id="fileName" class="form-control mb-2" placeholder="e.g. coa1">
                             <label class="small text-muted mb-1">Packet Contents</label>
-                            <textarea id="fileContent" class="form-control" rows="11"
-                                placeholder="User-Name = 'test'...."></textarea>
+                            <div class="editor-wrapper">
+                                <div id="backdrop" class="editor-backdrop"></div>
+                                <textarea id="fileContent" class="editor-textarea" spellcheck="false"
+                                    placeholder="User-Name = 'test'...."></textarea>
+                            </div>
                             <button class="btn btn-success w-100 mt-3" onclick="saveCoA()">Save File</button>
                         </div>
                     </div>
@@ -221,6 +288,7 @@
             document.getElementById('sendBtn').disabled = true;
             document.getElementById('output').textContent = "Ready to create new file.";
             document.getElementById('fileName').focus();
+            updateEditor();
         }
 
         function selectCoaFile(name, el) {
@@ -235,6 +303,7 @@
             fetch(`/get_file_content?path=coa/${name}`)
                 .then(res => res.json()).then(data => {
                     document.getElementById('fileContent').value = data.content;
+                    updateEditor();
                     document.getElementById('output').textContent = `Loaded ${name} for execution.`;
                 });
         }
@@ -287,6 +356,41 @@
                 fetch(`/coa/delete/${filename}`, { method: 'DELETE' }).then(() => location.reload());
             }
         }
+
+
+        // --- Editor Highlighting Logic ---
+        const textarea = document.getElementById('fileContent');
+        const backdrop = document.getElementById('backdrop');
+
+        function updateEditor() {
+            let text = textarea.value;
+
+            // Escape HTML to prevent code breakage
+            text = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+            // Find lines starting with # and wrap them in a span
+            let highlighted = text.split('\n').map(line => {
+                if (line.trim().startsWith('#')) {
+                    return `<span class="comment">${line}</span>`;
+                }
+                return line;
+            }).join('\n');
+
+            // Fix for trailing newlines not rendering in pre-wrap divs
+            if (text[text.length - 1] === '\n') {
+                highlighted += ' ';
+            }
+
+            backdrop.innerHTML = highlighted;
+        }
+
+        // Sync scrolling between the textarea and the backdrop
+        textarea.addEventListener('scroll', () => {
+            backdrop.scrollTop = textarea.scrollTop;
+        });
+
+        // Update highlighting whenever the user types
+        textarea.addEventListener('input', updateEditor);
     </script>
 </body>
 
