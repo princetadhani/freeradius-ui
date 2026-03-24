@@ -174,6 +174,28 @@
 
 <body>
 
+    <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3 mt-3" style="z-index: 1080;">
+        <div id="statusToast" class="toast bg-white border-0 shadow-sm" role="alert" aria-live="assertive"
+            aria-atomic="true">
+            <div class="toast-body p-3">
+                <div class="d-flex align-items-start">
+                    <div id="toastIcon" class="me-3 fs-4"></div>
+                    <div class="flex-grow-1">
+                        <h6 id="toastTitle" class="mb-1 fw-bold text-dark">Notification</h6>
+                        <div id="toastMessage" class="text-secondary mb-3" style="font-size: 13px;"></div>
+                        <div id="toastActions" class="d-none">
+                            <button type="button" class="btn btn-sm me-2 fw-bold" id="toastYesBtn">Yes</button>
+                            <button type="button" class="btn btn-sm btn-light border text-dark"
+                                data-bs-dismiss="toast">Cancel</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close ms-2 mt-1" data-bs-dismiss="toast"
+                        aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <nav class="navbar">
         <div class="d-flex align-items-center w-100">
             <button class="btn btn-sm btn-light border-0 me-2" id="sidebarToggle">☰</button>
@@ -259,6 +281,7 @@
         </main>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.getElementById('sidebarToggle').onclick = () => document.getElementById('sidebar').classList.toggle('collapsed');
 
@@ -310,16 +333,25 @@
 
         function saveCoA() {
             const name = document.getElementById('fileName').value;
-            if (!name) return alert("Please enter a filename!");
-            fetch('/coa/save', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ filename: name, content: document.getElementById('fileContent').value })
-            }).then(res => res.json()).then(data => {
-                if (data.status === 'success') {
-                    alert(`Success: ${name}.txt saved.`);
-                    location.reload();
-                }
+            if (!name) return showToast('Error', 'Please enter a filename!', 'error');
+
+            // Trigger the Save themed toast
+            showToast('Save File', `Are you sure you want to save changes to ${name}.txt?`, 'save', () => {
+
+                // This runs if they click "Yes, Save"
+                fetch('/coa/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename: name, content: document.getElementById('fileContent').value })
+                }).then(res => res.json()).then(data => {
+                    if (data.status === 'success') {
+                        showToast('Saved', `${name}.txt has been saved successfully.`, 'success');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showToast('Failed', 'Failed to save file.', 'error');
+                    }
+                }).catch(() => showToast('Connection Error', 'Could not connect to the server.', 'error'));
+
             });
         }
 
@@ -352,9 +384,17 @@
 
         function deleteCoA(filename, event) {
             event.stopPropagation();
-            if (confirm(`Permanent delete ${filename}?`)) {
-                fetch(`/coa/delete/${filename}`, { method: 'DELETE' }).then(() => location.reload());
-            }
+
+            // Trigger the Delete themed toast
+            showToast('Delete File', `Are you sure you want to permanently delete ${filename}? This cannot be undone.`, 'delete', () => {
+
+                // This runs if they click "Yes, Delete"
+                fetch(`/coa/delete/${filename}`, { method: 'DELETE' }).then(() => {
+                    showToast('Deleted', `${filename} was deleted successfully.`, 'success');
+                    setTimeout(() => location.reload(), 1500);
+                }).catch(() => showToast('Error', 'Failed to delete the file.', 'error'));
+
+            });
         }
 
 
@@ -391,6 +431,69 @@
 
         // Update highlighting whenever the user types
         textarea.addEventListener('input', updateEditor);
+
+        let toastInstance = null;
+
+        function showToast(title, message, actionType = 'success', onConfirm = null) {
+            const toastEl = document.getElementById('statusToast');
+            const toastTitle = document.getElementById('toastTitle');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+            const toastActions = document.getElementById('toastActions');
+            const yesBtn = document.getElementById('toastYesBtn');
+
+            if (!toastInstance) {
+                toastInstance = new bootstrap.Toast(toastEl);
+            }
+
+            // Set text
+            toastTitle.textContent = title;
+            toastMessage.textContent = message;
+
+            // Reset dynamic classes
+            yesBtn.className = 'btn btn-sm me-2 fw-bold';
+            toastEl.className = 'toast bg-white border-0 shadow';
+
+            // Theme the toast based on the action
+            if (actionType === 'save') {
+                toastIcon.innerHTML = '💾';
+                yesBtn.classList.add('btn-success');
+                yesBtn.textContent = 'Yes, Save';
+                toastEl.classList.add('border-start', 'border-success', 'border-4');
+            } else if (actionType === 'delete') {
+                toastIcon.innerHTML = '⚠️';
+                yesBtn.classList.add('btn-danger');
+                yesBtn.textContent = 'Yes, Delete';
+                toastEl.classList.add('border-start', 'border-danger', 'border-4');
+            } else if (actionType === 'success') {
+                toastIcon.innerHTML = '✅';
+                toastEl.classList.add('border-start', 'border-success', 'border-4');
+            } else if (actionType === 'error') {
+                toastIcon.innerHTML = '❌';
+                toastEl.classList.add('border-start', 'border-danger', 'border-4');
+            }
+
+            // Handle button visibility and auto-hide behavior
+            if (onConfirm) {
+                toastActions.classList.remove('d-none');
+                toastInstance._config.autohide = false; // Stay open waiting for click
+
+                // Refresh event listener cleanly
+                const newYesBtn = yesBtn.cloneNode(true);
+                yesBtn.parentNode.replaceChild(newYesBtn, yesBtn);
+                newYesBtn.addEventListener('click', () => {
+                    toastInstance.hide();
+                    onConfirm();
+                });
+            } else {
+                toastActions.classList.add('d-none');
+                toastInstance._config.autohide = true;
+                toastInstance._config.delay = 2500; // Auto-close after 2.5s for normal alerts
+            }
+
+            toastInstance.show();
+        }
+
     </script>
 </body>
 
