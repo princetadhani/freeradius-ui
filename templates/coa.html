@@ -175,17 +175,17 @@
 <body>
 
     <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3 mt-3" style="z-index: 1080;">
-        <div id="statusToast" class="toast bg-white border-0 shadow-sm" role="alert" aria-live="assertive"
+        <div id="statusToast" class="toast bg-white border-0 shadow-lg" role="alert" aria-live="assertive"
             aria-atomic="true">
-            <div class="toast-body p-3">
+            <div class="toast-body p-4">
                 <div class="d-flex align-items-start">
-                    <div id="toastIcon" class="me-3 fs-4"></div>
+                    <div id="toastIcon" class="me-3 fs-3"></div>
                     <div class="flex-grow-1">
-                        <h6 id="toastTitle" class="mb-1 fw-bold text-dark">Notification</h6>
-                        <div id="toastMessage" class="text-secondary mb-3" style="font-size: 13px;"></div>
+                        <h5 id="toastTitle" class="mb-2 fw-bold text-dark">Notification</h5>
+                        <div id="toastMessage" class="text-dark mb-4 fs-6 lh-base"></div>
                         <div id="toastActions" class="d-none">
-                            <button type="button" class="btn btn-sm me-2 fw-bold" id="toastYesBtn">Yes</button>
-                            <button type="button" class="btn btn-sm btn-light border text-dark"
+                            <button type="button" class="btn me-2 fw-bold px-3" id="toastYesBtn">Yes</button>
+                            <button type="button" class="btn btn-light border text-dark px-3"
                                 data-bs-dismiss="toast">Cancel</button>
                         </div>
                     </div>
@@ -441,6 +441,7 @@
             const toastIcon = document.getElementById('toastIcon');
             const toastActions = document.getElementById('toastActions');
             const yesBtn = document.getElementById('toastYesBtn');
+            const cancelBtn = toastActions.querySelector('[data-bs-dismiss="toast"]');
 
             if (!toastInstance) {
                 toastInstance = new bootstrap.Toast(toastEl);
@@ -449,6 +450,10 @@
             // Set text
             toastTitle.textContent = title;
             toastMessage.textContent = message;
+
+            // Reset button states (in case they were disabled during a previous loading state)
+            yesBtn.disabled = false;
+            if (cancelBtn) cancelBtn.disabled = false;
 
             // Reset dynamic classes
             yesBtn.className = 'btn btn-sm me-2 fw-bold';
@@ -481,8 +486,14 @@
                 // Refresh event listener cleanly
                 const newYesBtn = yesBtn.cloneNode(true);
                 yesBtn.parentNode.replaceChild(newYesBtn, yesBtn);
+
                 newYesBtn.addEventListener('click', () => {
-                    toastInstance.hide();
+                    // --- LOADING STATE TRIGGER ---
+                    newYesBtn.disabled = true;
+                    if (cancelBtn) cancelBtn.disabled = true;
+                    newYesBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Processing...';
+
+                    // Execute the provided function (fetch request)
                     onConfirm();
                 });
             } else {
