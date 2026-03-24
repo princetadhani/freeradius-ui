@@ -174,23 +174,30 @@
 
 <body>
 
-    <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3 mt-3" style="z-index: 1080;">
-        <div id="statusToast" class="toast bg-white border-0 shadow-lg" role="alert" aria-live="assertive"
+    <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3 mt-2"
+        style="z-index: 1080; width: 420px;">
+        <div id="statusToast" class="toast w-100 shadow-lg rounded-3 border" role="alert" aria-live="assertive"
             aria-atomic="true">
-            <div class="toast-body p-4">
+            <div class="toast-body py-3 px-4">
                 <div class="d-flex align-items-start">
-                    <div id="toastIcon" class="me-3 fs-3"></div>
+                    <div id="toastIcon" class="me-3 mt-1"></div>
+
                     <div class="flex-grow-1">
-                        <h5 id="toastTitle" class="mb-2 fw-bold text-dark">Notification</h5>
-                        <div id="toastMessage" class="text-dark mb-4 fs-6 lh-base"></div>
-                        <div id="toastActions" class="d-none">
-                            <button type="button" class="btn me-2 fw-bold px-3" id="toastYesBtn">Yes</button>
-                            <button type="button" class="btn btn-light border text-dark px-3"
-                                data-bs-dismiss="toast">Cancel</button>
+                        <div class="d-flex justify-content-between align-items-start mb-0">
+                            <h6 id="toastTitle" class="mb-0 fw-bold text-dark fs-5">Notification</h6>
+                            <button type="button" class="btn-close btn-sm ms-2" data-bs-dismiss="toast"
+                                aria-label="Close"></button>
                         </div>
+                        <div id="toastMessage" class="text-dark mt-1 mb-0"
+                            style="font-size: 0.95rem; line-height: 1.4; font-weight: 500;"></div>
                     </div>
-                    <button type="button" class="btn-close ms-2 mt-1" data-bs-dismiss="toast"
-                        aria-label="Close"></button>
+                </div>
+
+                <div id="toastActions" class="d-none d-flex justify-content-end gap-2 mt-3 pt-2 border-top"
+                    style="border-color: rgba(0,0,0,0.1) !important;">
+                    <button type="button" class="btn btn-sm bg-white border px-3 text-dark fw-medium shadow-sm"
+                        data-bs-dismiss="toast">Cancel</button>
+                    <button type="button" class="btn btn-sm px-4 fw-bold shadow-sm" id="toastYesBtn">Yes</button>
                 </div>
             </div>
         </div>
@@ -336,7 +343,7 @@
             if (!name) return showToast('Error', 'Please enter a filename!', 'error');
 
             // Trigger the Save themed toast
-            showToast('Save File', `Are you sure you want to save changes to ${name}.txt?`, 'save', () => {
+            showToast('Save Changes', `Are you sure you want to save changes to <strong class="text-dark">${name}.txt</strong>?`, 'save', () => {
 
                 // This runs if they click "Yes, Save"
                 fetch('/coa/save', {
@@ -386,8 +393,7 @@
             event.stopPropagation();
 
             // Trigger the Delete themed toast
-            showToast('Delete File', `Are you sure you want to permanently delete ${filename}? This cannot be undone.`, 'delete', () => {
-
+            showToast('Delete File', `Are you sure you want to permanently delete <strong class="text-danger">${filename}</strong>?`, 'delete', () => {
                 // This runs if they click "Yes, Delete"
                 fetch(`/coa/delete/${filename}`, { method: 'DELETE' }).then(() => {
                     showToast('Deleted', `${filename} was deleted successfully.`, 'success');
@@ -434,6 +440,14 @@
 
         let toastInstance = null;
 
+        // Premium SVG Icons
+        const toastIcons = {
+            save: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-success"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>`,
+            delete: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-danger"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`,
+            success: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-success"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`,
+            error: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-danger"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`
+        };
+
         function showToast(title, message, actionType = 'success', onConfirm = null) {
             const toastEl = document.getElementById('statusToast');
             const toastTitle = document.getElementById('toastTitle');
@@ -443,63 +457,59 @@
             const yesBtn = document.getElementById('toastYesBtn');
             const cancelBtn = toastActions.querySelector('[data-bs-dismiss="toast"]');
 
-            if (!toastInstance) {
-                toastInstance = new bootstrap.Toast(toastEl);
-            }
+            if (!toastInstance) toastInstance = new bootstrap.Toast(toastEl);
 
-            // Set text
+            // Set Text
             toastTitle.textContent = title;
-            toastMessage.textContent = message;
+            toastMessage.innerHTML = message;
 
-            // Reset button states (in case they were disabled during a previous loading state)
+            // Reset button states and base classes
             yesBtn.disabled = false;
             if (cancelBtn) cancelBtn.disabled = false;
+            yesBtn.className = 'btn btn-sm px-4 fw-bold shadow-sm';
+            toastEl.className = 'toast w-100 shadow-lg rounded-3 border';
 
-            // Reset dynamic classes
-            yesBtn.className = 'btn btn-sm me-2 fw-bold';
-            toastEl.className = 'toast bg-white border-0 shadow';
-
-            // Theme the toast based on the action
+            // Apply Dynamic Background Colors & Themes
             if (actionType === 'save') {
-                toastIcon.innerHTML = '💾';
+                toastIcon.innerHTML = toastIcons.save;
                 yesBtn.classList.add('btn-success');
-                yesBtn.textContent = 'Yes, Save';
-                toastEl.classList.add('border-start', 'border-success', 'border-4');
+                yesBtn.textContent = 'Save File';
+                toastEl.style.backgroundColor = '#ecfdf5'; // Soft Mint Green
+                toastEl.style.borderColor = '#a7f3d0';
             } else if (actionType === 'delete') {
-                toastIcon.innerHTML = '⚠️';
+                toastIcon.innerHTML = toastIcons.delete;
                 yesBtn.classList.add('btn-danger');
-                yesBtn.textContent = 'Yes, Delete';
-                toastEl.classList.add('border-start', 'border-danger', 'border-4');
+                yesBtn.textContent = 'Delete';
+                toastEl.style.backgroundColor = '#fef2f2'; // Soft Blush Red
+                toastEl.style.borderColor = '#fecaca';
             } else if (actionType === 'success') {
-                toastIcon.innerHTML = '✅';
-                toastEl.classList.add('border-start', 'border-success', 'border-4');
+                toastIcon.innerHTML = toastIcons.success;
+                toastEl.style.backgroundColor = '#ecfdf5'; // Soft Mint Green
+                toastEl.style.borderColor = '#a7f3d0';
             } else if (actionType === 'error') {
-                toastIcon.innerHTML = '❌';
-                toastEl.classList.add('border-start', 'border-danger', 'border-4');
+                toastIcon.innerHTML = toastIcons.error;
+                toastEl.style.backgroundColor = '#fef2f2'; // Soft Blush Red
+                toastEl.style.borderColor = '#fecaca';
             }
 
-            // Handle button visibility and auto-hide behavior
+            // Logic for Buttons & Auto-hide
             if (onConfirm) {
                 toastActions.classList.remove('d-none');
-                toastInstance._config.autohide = false; // Stay open waiting for click
+                toastInstance._config.autohide = false;
 
-                // Refresh event listener cleanly
                 const newYesBtn = yesBtn.cloneNode(true);
                 yesBtn.parentNode.replaceChild(newYesBtn, yesBtn);
 
                 newYesBtn.addEventListener('click', () => {
-                    // --- LOADING STATE TRIGGER ---
                     newYesBtn.disabled = true;
                     if (cancelBtn) cancelBtn.disabled = true;
-                    newYesBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Processing...';
-
-                    // Execute the provided function (fetch request)
+                    newYesBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Processing...';
                     onConfirm();
                 });
             } else {
                 toastActions.classList.add('d-none');
                 toastInstance._config.autohide = true;
-                toastInstance._config.delay = 2500; // Auto-close after 2.5s for normal alerts
+                toastInstance._config.delay = 3000;
             }
 
             toastInstance.show();
