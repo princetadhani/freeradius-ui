@@ -441,13 +441,52 @@
                 }).then(res => res.json()).then(data => {
                     if (data.status === 'success') {
                         showToast('Saved', `<strong style="color: #059669; font-weight: 700;">${name}.txt</strong> has been saved successfully.`, 'success');
-                        setTimeout(() => location.reload(), 1500);
+
+                        // Optimistic update: Update the sidebar without full reload
+                        const fullFilename = name + '.txt';
+                        updateSidebarAfterSave(fullFilename);
+
+                        // Keep the file selected and ready to send
+                        document.getElementById('selectedFileName').value = fullFilename;
+                        document.getElementById('selectedDisplay').innerText = fullFilename;
+                        document.getElementById('sendBtn').disabled = false;
+                        document.getElementById('sendBtn').innerHTML = `🚀 Send <strong>${fullFilename}</strong>`;
+                        document.getElementById('output').textContent = `${fullFilename} saved and ready to send.`;
                     } else {
                         showToast('Failed', 'Failed to save file.', 'error');
                     }
                 }).catch(() => showToast('Connection Error', 'Could not connect to the server.', 'error'));
 
             });
+        }
+
+        function updateSidebarAfterSave(filename) {
+            const explorer = document.getElementById('coaExplorer');
+
+            // Check if file already exists in sidebar
+            let existingFile = null;
+            document.querySelectorAll('.file-item').forEach(item => {
+                if (item.getAttribute('data-filename') === filename) {
+                    existingFile = item;
+                }
+            });
+
+            if (!existingFile) {
+                // Add new file to sidebar
+                const newFileItem = document.createElement('div');
+                newFileItem.className = 'file-item active';
+                newFileItem.setAttribute('data-filename', filename);
+                newFileItem.onclick = function () { selectCoaFile(filename, this); };
+                newFileItem.innerHTML = `
+                    <span>📄 ${filename}</span>
+                    <span class="delete-btn" title="Delete" onclick="deleteCoA('${filename}', event)">🗑️</span>
+                `;
+                explorer.appendChild(newFileItem);
+            } else {
+                // Mark existing file as active
+                document.querySelectorAll('.file-item').forEach(i => i.classList.remove('active'));
+                existingFile.classList.add('active');
+            }
         }
 
         function sendCoA() {
@@ -485,7 +524,25 @@
                 // This runs if they click "Yes, Delete"
                 fetch(`/coa/delete/${filename}`, { method: 'DELETE' }).then(() => {
                     showToast('Deleted', `<strong style="color: #059669; font-weight: 700;">${filename}</strong> was deleted successfully.`, 'success');
-                    setTimeout(() => location.reload(), 1500);
+
+                    // Optimistic update: Remove from sidebar without reload
+                    const fileItem = document.querySelector(`.file-item[data-filename="${filename}"]`);
+                    if (fileItem) {
+                        fileItem.remove();
+                    }
+
+                    // Clear the editor if this was the selected file
+                    const selectedFile = document.getElementById('selectedFileName').value;
+                    if (selectedFile === filename) {
+                        document.getElementById('fileName').value = '';
+                        document.getElementById('fileContent').value = '';
+                        document.getElementById('selectedFileName').value = '';
+                        document.getElementById('selectedDisplay').innerText = 'None';
+                        document.getElementById('sendBtn').disabled = true;
+                        document.getElementById('sendBtn').innerHTML = 'Send Packet';
+                        document.getElementById('output').textContent = 'File deleted. Select or create a new file.';
+                        updateEditor();
+                    }
                 }).catch(() => showToast('Error', 'Failed to delete the file.', 'error'));
 
             });
