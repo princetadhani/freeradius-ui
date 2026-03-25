@@ -174,34 +174,114 @@
 
 <body>
 
+    <!-- Modern Colorful Toast Notification -->
     <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3 mt-2"
-        style="z-index: 1080; width: 420px;">
-        <div id="statusToast" class="toast w-100 shadow-lg rounded-3 border" role="alert" aria-live="assertive"
-            aria-atomic="true">
-            <div class="toast-body py-3 px-4">
+        style="z-index: 1080; width: 450px;">
+        <div id="statusToast" class="toast w-100 rounded-4 border-0 overflow-hidden" role="alert" aria-live="assertive"
+            aria-atomic="true" style="box-shadow: 0 10px 40px rgba(0,0,0,0.15); backdrop-filter: blur(10px);">
+
+            <!-- Animated Progress Bar -->
+            <div id="toastProgressBar" class="position-absolute top-0 start-0 w-100"
+                style="height: 4px; background: linear-gradient(90deg, rgba(255,255,255,0.3), rgba(255,255,255,0.8)); transform-origin: left; transition: transform 3s linear;">
+            </div>
+
+            <div class="toast-body p-4 position-relative">
                 <div class="d-flex align-items-start">
-                    <div id="toastIcon" class="me-3 mt-1"></div>
+                    <!-- Icon Container with Animated Background -->
+                    <div id="toastIconContainer"
+                        class="me-3 rounded-circle d-flex align-items-center justify-content-center"
+                        style="width: 48px; height: 48px; min-width: 48px; transition: transform 0.3s ease;">
+                        <div id="toastIcon"></div>
+                    </div>
 
                     <div class="flex-grow-1">
-                        <div class="d-flex justify-content-between align-items-start mb-0">
-                            <h6 id="toastTitle" class="mb-0 fw-bold text-dark fs-5">Notification</h6>
-                            <button type="button" class="btn-close btn-sm ms-2" data-bs-dismiss="toast"
-                                aria-label="Close"></button>
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <h6 id="toastTitle" class="mb-0 fw-bold fs-5" style="letter-spacing: -0.3px;">Notification
+                            </h6>
+                            <button type="button" class="btn-close btn-sm ms-2 opacity-75" data-bs-dismiss="toast"
+                                aria-label="Close" style="filter: brightness(0) invert(1);"></button>
                         </div>
-                        <div id="toastMessage" class="text-dark mt-1 mb-0"
-                            style="font-size: 0.95rem; line-height: 1.4; font-weight: 500;"></div>
+                        <div id="toastMessage" class="mt-2 mb-0 opacity-90"
+                            style="font-size: 0.925rem; line-height: 1.5; font-weight: 400;"></div>
                     </div>
                 </div>
 
-                <div id="toastActions" class="d-none d-flex justify-content-end gap-2 mt-3 pt-2 border-top"
-                    style="border-color: rgba(0,0,0,0.1) !important;">
-                    <button type="button" class="btn btn-sm bg-white border px-3 text-dark fw-medium shadow-sm"
+                <div id="toastActions" class="d-none d-flex justify-content-center align-items-center gap-3 mt-3 pt-3"
+                    style="border-top: 1px solid rgba(255,255,255,0.2);">
+                    <button type="button" class="btn btn-sm px-4 py-2 fw-medium rounded-pill"
+                        style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); backdrop-filter: blur(10px);"
                         data-bs-dismiss="toast">Cancel</button>
-                    <button type="button" class="btn btn-sm px-4 fw-bold shadow-sm" id="toastYesBtn">Yes</button>
+                    <button type="button" class="btn btn-sm px-4 py-2 fw-bold rounded-pill shadow-sm" id="toastYesBtn"
+                        style="border: none;">Confirm</button>
                 </div>
             </div>
         </div>
     </div>
+
+    <style>
+        /* Toast Animation Keyframes - Optimized for Performance */
+        @keyframes slideInDown {
+            from {
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes subtlePulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.03);
+            }
+        }
+
+        .toast-container {
+            will-change: transform;
+        }
+
+        #statusToast {
+            will-change: transform, opacity;
+        }
+
+        #statusToast.show {
+            animation: slideInDown 0.3s ease-out;
+        }
+
+        #toastIconContainer {
+            animation: subtlePulse 3s ease-in-out infinite;
+            will-change: transform;
+        }
+
+        /* Hover effects for toast buttons */
+        #toastActions button {
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            will-change: transform;
+        }
+
+        #toastActions button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        #toastActions button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Smooth progress bar animation */
+        #toastProgressBar {
+            will-change: transform;
+        }
+    </style>
 
     <nav class="navbar">
         <div class="d-flex align-items-center w-100">
@@ -342,8 +422,8 @@
             const name = document.getElementById('fileName').value;
             if (!name) return showToast('Error', 'Please enter a filename!', 'error');
 
-            // Trigger the Save themed toast
-            showToast('Save Changes', `Are you sure you want to save changes to <strong class="text-dark">${name}.txt</strong>?`, 'save', () => {
+            // Trigger the Save themed toast with bold white filename
+            showToast('Save Changes', `Are you sure you want to save changes to <strong style="color: #ffffff; font-weight: 700;">${name}.txt</strong>?`, 'save', () => {
 
                 // This runs if they click "Yes, Save"
                 fetch('/coa/save', {
@@ -352,7 +432,7 @@
                     body: JSON.stringify({ filename: name, content: document.getElementById('fileContent').value })
                 }).then(res => res.json()).then(data => {
                     if (data.status === 'success') {
-                        showToast('Saved', `${name}.txt has been saved successfully.`, 'success');
+                        showToast('Saved', `<strong style="color: #ffffff; font-weight: 700;">${name}.txt</strong> has been saved successfully.`, 'success');
                         setTimeout(() => location.reload(), 1500);
                     } else {
                         showToast('Failed', 'Failed to save file.', 'error');
@@ -392,11 +472,11 @@
         function deleteCoA(filename, event) {
             event.stopPropagation();
 
-            // Trigger the Delete themed toast
-            showToast('Delete File', `Are you sure you want to permanently delete <strong class="text-danger">${filename}</strong>?`, 'delete', () => {
+            // Trigger the Delete themed toast with bold white filename
+            showToast('Delete File', `Are you sure you want to permanently delete <strong style="color: #ffffff; font-weight: 700;">${filename}</strong>?`, 'delete', () => {
                 // This runs if they click "Yes, Delete"
                 fetch(`/coa/delete/${filename}`, { method: 'DELETE' }).then(() => {
-                    showToast('Deleted', `${filename} was deleted successfully.`, 'success');
+                    showToast('Deleted', `<strong style="color: #ffffff; font-weight: 700;">${filename}</strong> was deleted successfully.`, 'success');
                     setTimeout(() => location.reload(), 1500);
                 }).catch(() => showToast('Error', 'Failed to delete the file.', 'error'));
 
@@ -440,12 +520,13 @@
 
         let toastInstance = null;
 
-        // Premium SVG Icons
+        // Modern Colorful SVG Icons with White Fill
         const toastIcons = {
-            save: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-success"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>`,
-            delete: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-danger"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`,
-            success: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-success"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`,
-            error: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-danger"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`
+            save: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>`,
+            delete: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`,
+            success: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`,
+            error: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`,
+            info: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`
         };
 
         function showToast(title, message, actionType = 'success', onConfirm = null) {
@@ -453,7 +534,9 @@
             const toastTitle = document.getElementById('toastTitle');
             const toastMessage = document.getElementById('toastMessage');
             const toastIcon = document.getElementById('toastIcon');
+            const toastIconContainer = document.getElementById('toastIconContainer');
             const toastActions = document.getElementById('toastActions');
+            const toastProgressBar = document.getElementById('toastProgressBar');
             const yesBtn = document.getElementById('toastYesBtn');
             const cancelBtn = toastActions.querySelector('[data-bs-dismiss="toast"]');
 
@@ -466,30 +549,51 @@
             // Reset button states and base classes
             yesBtn.disabled = false;
             if (cancelBtn) cancelBtn.disabled = false;
-            yesBtn.className = 'btn btn-sm px-4 fw-bold shadow-sm';
-            toastEl.className = 'toast w-100 shadow-lg rounded-3 border';
+            yesBtn.className = 'btn btn-sm px-4 py-2 fw-bold rounded-pill shadow-sm';
+            toastEl.className = 'toast w-100 rounded-4 border-0 overflow-hidden';
+            toastEl.style.boxShadow = '0 10px 40px rgba(0,0,0,0.15)';
+            toastEl.style.backdropFilter = 'blur(10px)';
 
-            // Apply Dynamic Background Colors & Themes
+            // Reset progress bar
+            toastProgressBar.style.transform = 'scaleX(1)';
+
+            // Apply Dynamic Gradient Backgrounds & Themes
             if (actionType === 'save') {
                 toastIcon.innerHTML = toastIcons.save;
-                yesBtn.classList.add('btn-success');
-                yesBtn.textContent = 'Save File';
-                toastEl.style.backgroundColor = '#ecfdf5'; // Soft Mint Green
-                toastEl.style.borderColor = '#a7f3d0';
+                toastIconContainer.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                toastEl.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                toastTitle.style.color = '#ffffff';
+                toastMessage.style.color = '#ffffff';
+                yesBtn.style.background = 'rgba(255,255,255,0.95)';
+                yesBtn.style.color = '#059669';
+                yesBtn.textContent = '💾 Save File';
             } else if (actionType === 'delete') {
                 toastIcon.innerHTML = toastIcons.delete;
-                yesBtn.classList.add('btn-danger');
-                yesBtn.textContent = 'Delete';
-                toastEl.style.backgroundColor = '#fef2f2'; // Soft Blush Red
-                toastEl.style.borderColor = '#fecaca';
+                toastIconContainer.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+                toastEl.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+                toastTitle.style.color = '#ffffff';
+                toastMessage.style.color = '#ffffff';
+                yesBtn.style.background = 'rgba(255,255,255,0.95)';
+                yesBtn.style.color = '#dc2626';
+                yesBtn.textContent = '🗑️ Delete';
             } else if (actionType === 'success') {
                 toastIcon.innerHTML = toastIcons.success;
-                toastEl.style.backgroundColor = '#ecfdf5'; // Soft Mint Green
-                toastEl.style.borderColor = '#a7f3d0';
+                toastIconContainer.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                toastEl.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                toastTitle.style.color = '#ffffff';
+                toastMessage.style.color = '#ffffff';
             } else if (actionType === 'error') {
                 toastIcon.innerHTML = toastIcons.error;
-                toastEl.style.backgroundColor = '#fef2f2'; // Soft Blush Red
-                toastEl.style.borderColor = '#fecaca';
+                toastIconContainer.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+                toastEl.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+                toastTitle.style.color = '#ffffff';
+                toastMessage.style.color = '#ffffff';
+            } else if (actionType === 'info') {
+                toastIcon.innerHTML = toastIcons.info;
+                toastIconContainer.style.background = 'linear-gradient(135deg, #3b82f6, #2563eb)';
+                toastEl.style.background = 'linear-gradient(135deg, #3b82f6, #2563eb)';
+                toastTitle.style.color = '#ffffff';
+                toastMessage.style.color = '#ffffff';
             }
 
             // Logic for Buttons & Auto-hide
@@ -510,6 +614,11 @@
                 toastActions.classList.add('d-none');
                 toastInstance._config.autohide = true;
                 toastInstance._config.delay = 3000;
+
+                // Animate progress bar for auto-hide
+                setTimeout(() => {
+                    toastProgressBar.style.transform = 'scaleX(0)';
+                }, 100);
             }
 
             toastInstance.show();
