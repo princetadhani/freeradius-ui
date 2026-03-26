@@ -1042,7 +1042,28 @@
             animation: blink 1s infinite;
         }
 
-        /* Fade In Animation for Page Load */
+        /* Soft Bouncy Zoom In/Out Animation for Page Load */
+        @keyframes bouncyZoom {
+            0% {
+                opacity: 0;
+                transform: scale(0.85);
+            }
+
+            60% {
+                opacity: 1;
+                transform: scale(1.02);
+            }
+
+            80% {
+                transform: scale(0.99);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -1056,7 +1077,7 @@
         }
 
         .main-layout {
-            animation: fadeInUp 0.6s ease-out;
+            animation: bouncyZoom 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .card {
