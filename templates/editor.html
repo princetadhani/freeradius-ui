@@ -556,83 +556,95 @@
 
             if (!toastInstance) toastInstance = new bootstrap.Toast(toastEl);
 
-            // Set Text
-            toastTitle.textContent = title;
-            toastMessage.innerHTML = message;
+            // Function to update toast content and show
+            const updateAndShow = () => {
+                // Set Text
+                toastTitle.textContent = title;
+                toastMessage.innerHTML = message;
 
-            // Reset button states and base classes
-            yesBtn.disabled = false;
-            if (cancelBtn) cancelBtn.disabled = false;
-            yesBtn.className = 'btn btn-sm px-4 py-2 fw-bold rounded-2 shadow-sm';
+                // Reset button states and base classes
+                yesBtn.disabled = false;
+                if (cancelBtn) cancelBtn.disabled = false;
+                yesBtn.className = 'btn btn-sm px-4 py-2 fw-bold rounded-2 shadow-sm';
 
-            // Reset progress bar
-            toastProgressBar.style.transform = 'scaleX(1)';
+                // Reset progress bar
+                toastProgressBar.style.transform = 'scaleX(1)';
 
-            // Apply Clean Color Themes with Accent Colors
-            if (actionType === 'save') {
-                toastIcon.innerHTML = toastIcons.save;
-                toastIconContainer.style.background = '#d1fae5';
-                toastIcon.style.color = '#059669';
-                toastBorder.style.background = '#10b981';
-                toastProgressBar.style.background = '#10b981';
-                yesBtn.style.background = '#10b981';
-                yesBtn.style.color = '#ffffff';
-                yesBtn.textContent = '💾 Save & Restart';
-            } else if (actionType === 'delete') {
-                toastIcon.innerHTML = toastIcons.delete;
-                toastIconContainer.style.background = '#fee2e2';
-                toastIcon.style.color = '#dc2626';
-                toastBorder.style.background = '#ef4444';
-                toastProgressBar.style.background = '#ef4444';
-                yesBtn.style.background = '#ef4444';
-                yesBtn.style.color = '#ffffff';
-                yesBtn.textContent = '🗑️ Delete';
-            } else if (actionType === 'success') {
-                toastIcon.innerHTML = toastIcons.success;
-                toastIconContainer.style.background = '#d1fae5';
-                toastIcon.style.color = '#059669';
-                toastBorder.style.background = '#10b981';
-                toastProgressBar.style.background = '#10b981';
-            } else if (actionType === 'error') {
-                toastIcon.innerHTML = toastIcons.error;
-                toastIconContainer.style.background = '#fee2e2';
-                toastIcon.style.color = '#dc2626';
-                toastBorder.style.background = '#ef4444';
-                toastProgressBar.style.background = '#ef4444';
-            } else if (actionType === 'info') {
-                toastIcon.innerHTML = toastIcons.info;
-                toastIconContainer.style.background = '#dbeafe';
-                toastIcon.style.color = '#2563eb';
-                toastBorder.style.background = '#3b82f6';
-                toastProgressBar.style.background = '#3b82f6';
-            }
+                // Apply Clean Color Themes with Accent Colors
+                if (actionType === 'save') {
+                    toastIcon.innerHTML = toastIcons.save;
+                    toastIconContainer.style.background = '#d1fae5';
+                    toastIcon.style.color = '#059669';
+                    toastBorder.style.background = '#10b981';
+                    toastProgressBar.style.background = '#10b981';
+                    yesBtn.style.background = '#10b981';
+                    yesBtn.style.color = '#ffffff';
+                    yesBtn.textContent = '💾 Save & Restart';
+                } else if (actionType === 'delete') {
+                    toastIcon.innerHTML = toastIcons.delete;
+                    toastIconContainer.style.background = '#fee2e2';
+                    toastIcon.style.color = '#dc2626';
+                    toastBorder.style.background = '#ef4444';
+                    toastProgressBar.style.background = '#ef4444';
+                    yesBtn.style.background = '#ef4444';
+                    yesBtn.style.color = '#ffffff';
+                    yesBtn.textContent = '🗑️ Delete';
+                } else if (actionType === 'success') {
+                    toastIcon.innerHTML = toastIcons.success;
+                    toastIconContainer.style.background = '#d1fae5';
+                    toastIcon.style.color = '#059669';
+                    toastBorder.style.background = '#10b981';
+                    toastProgressBar.style.background = '#10b981';
+                } else if (actionType === 'error') {
+                    toastIcon.innerHTML = toastIcons.error;
+                    toastIconContainer.style.background = '#fee2e2';
+                    toastIcon.style.color = '#dc2626';
+                    toastBorder.style.background = '#ef4444';
+                    toastProgressBar.style.background = '#ef4444';
+                } else if (actionType === 'info') {
+                    toastIcon.innerHTML = toastIcons.info;
+                    toastIconContainer.style.background = '#dbeafe';
+                    toastIcon.style.color = '#2563eb';
+                    toastBorder.style.background = '#3b82f6';
+                    toastProgressBar.style.background = '#3b82f6';
+                }
 
-            // Logic for Buttons & Auto-hide
-            if (onConfirm) {
-                toastActions.classList.remove('d-none');
-                toastInstance._config.autohide = false;
+                // Logic for Buttons & Auto-hide
+                if (onConfirm) {
+                    toastActions.classList.remove('d-none');
+                    toastInstance._config.autohide = false;
 
-                const newYesBtn = yesBtn.cloneNode(true);
-                yesBtn.parentNode.replaceChild(newYesBtn, yesBtn);
+                    const newYesBtn = yesBtn.cloneNode(true);
+                    yesBtn.parentNode.replaceChild(newYesBtn, yesBtn);
 
-                newYesBtn.addEventListener('click', () => {
-                    newYesBtn.disabled = true;
-                    if (cancelBtn) cancelBtn.disabled = true;
-                    newYesBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Processing...';
-                    onConfirm();
-                });
+                    newYesBtn.addEventListener('click', () => {
+                        newYesBtn.disabled = true;
+                        if (cancelBtn) cancelBtn.disabled = true;
+                        newYesBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Processing...';
+                        onConfirm();
+                    });
+                } else {
+                    toastActions.classList.add('d-none');
+                    toastInstance._config.autohide = true;
+                    toastInstance._config.delay = 3000;
+
+                    // Animate progress bar for auto-hide
+                    setTimeout(() => {
+                        toastProgressBar.style.transform = 'scaleX(0)';
+                    }, 100);
+                }
+
+                toastInstance.show();
+            };
+
+            // If toast is currently visible, hide it first then show new one
+            if (toastEl.classList.contains('show')) {
+                toastInstance.hide();
+                // Wait for hide animation to complete (Bootstrap default is 150ms)
+                setTimeout(updateAndShow, 200);
             } else {
-                toastActions.classList.add('d-none');
-                toastInstance._config.autohide = true;
-                toastInstance._config.delay = 3000;
-
-                // Animate progress bar for auto-hide
-                setTimeout(() => {
-                    toastProgressBar.style.transform = 'scaleX(0)';
-                }, 100);
+                updateAndShow();
             }
-
-            toastInstance.show();
         }
 
         function saveFile() {
