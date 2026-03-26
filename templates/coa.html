@@ -12,113 +12,228 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        /* Futuristic Base Styles */
         body {
             height: 100vh;
             overflow: hidden;
             display: flex;
             flex-direction: column;
             font-family: 'Inter', sans-serif;
-            background: #f8f9fa;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+            position: relative;
         }
 
+        /* Animated Background Pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 20% 50%, rgba(0, 120, 212, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Glassmorphism Navbar */
         .navbar {
-            background: #fff;
-            border-bottom: 1px solid #e0e0e0;
-            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid rgba(224, 224, 224, 0.5);
+            padding: 0.75rem 1.5rem;
             z-index: 1000;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+            position: relative;
         }
 
         .main-layout {
             display: flex;
             flex-grow: 1;
             overflow: hidden;
+            position: relative;
+            z-index: 1;
         }
 
+        /* Futuristic Sidebar with Glassmorphism */
         .sidebar {
-            width: 280px;
-            background: #ffffff;
-            border-right: 1px solid #e0e0e0;
+            width: 300px;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-right: 1px solid rgba(224, 224, 224, 0.5);
             display: flex;
             flex-direction: column;
-            transition: margin-left 0.2s;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 4px 0 30px rgba(0, 0, 0, 0.05);
         }
 
         .sidebar.collapsed {
-            margin-left: -280px;
+            margin-left: -300px;
         }
 
         .explorer {
             overflow-y: auto;
             flex-grow: 1;
-            padding: 10px 0;
+            padding: 12px 0;
         }
 
+        /* Modern File Items with Hover Effects */
         .file-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 8px 15px;
+            padding: 12px 16px;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 13.5px;
             color: #444;
-            border-radius: 4px;
-            margin: 0 8px;
+            border-radius: 10px;
+            margin: 4px 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .file-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: linear-gradient(180deg, #0078d4, #00a8ff);
+            transform: scaleY(0);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .file-item:hover {
-            background: #f0f0f0;
+            background: rgba(240, 240, 240, 0.8);
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .file-item:hover::before {
+            transform: scaleY(1);
         }
 
         .file-item.active {
-            background: #e7f3ff;
+            background: linear-gradient(135deg, rgba(231, 243, 255, 0.9), rgba(179, 215, 255, 0.3));
             color: #0078d4;
             font-weight: 600;
-            border: 1px solid #b3d7ff;
+            border: 1px solid rgba(179, 215, 255, 0.8);
+            box-shadow: 0 4px 20px rgba(0, 120, 212, 0.15);
+            transform: translateX(4px);
+        }
+
+        .file-item.active::before {
+            transform: scaleY(1);
         }
 
         .delete-btn {
             color: #dc3545;
             opacity: 0;
-            transition: opacity 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: scale(0.8);
         }
 
         .file-item:hover .delete-btn {
             opacity: 1;
+            transform: scale(1);
         }
 
+        .delete-btn:hover {
+            transform: scale(1.2);
+            filter: drop-shadow(0 2px 4px rgba(220, 53, 69, 0.4));
+        }
+
+        /* Content Area with Enhanced Spacing */
         .content-area {
             flex-grow: 1;
-            padding: 20px;
+            padding: 24px;
             overflow-y: auto;
+            overflow-x: hidden;
         }
 
+        /* Futuristic Console */
         .console {
-            background: #1e1e1e;
-            color: #00ff00;
-            padding: 15px;
-            font-family: monospace;
-            border-radius: 5px;
-            height: 210px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #00ff88;
+            padding: 18px;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            border-radius: 12px;
+            height: 220px;
             overflow-y: auto;
             white-space: pre-wrap;
             font-size: 13px;
-            margin-top: 10px;
-            border: 1px solid #333;
+            margin-top: 12px;
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
         }
 
+        .console::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.5), transparent);
+        }
+
+        /* Glassmorphism Cards */
         .card {
             border: none;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-radius: 16px;
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.08),
+                0 1px 0 rgba(255, 255, 255, 0.8) inset;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
         }
 
-        /* Custom Editor Styling */
+        .card:hover {
+            box-shadow:
+                0 12px 48px rgba(0, 0, 0, 0.12),
+                0 1px 0 rgba(255, 255, 255, 0.8) inset;
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            background: rgba(255, 255, 255, 0.5) !important;
+            border-bottom: 1px solid rgba(224, 224, 224, 0.5);
+            padding: 14px 20px !important;
+            font-weight: 600;
+        }
+
+        /* Futuristic Editor Wrapper */
         .editor-wrapper {
             position: relative;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-            background: #fff;
-            height: 275px;
+            border: 1px solid rgba(222, 226, 230, 0.6);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            height: 290px;
             overflow: hidden;
+            box-shadow:
+                0 4px 20px rgba(0, 0, 0, 0.06),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .editor-wrapper:focus-within {
+            border-color: rgba(0, 120, 212, 0.5);
+            box-shadow:
+                0 8px 32px rgba(0, 120, 212, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9);
         }
 
         .editor-backdrop {
@@ -127,23 +242,20 @@
             left: 0;
             width: 100%;
             height: 100%;
-            padding: 0.375rem 0.75rem;
-            font-family: inherit;
-            font-size: 1rem;
-            line-height: 1.5;
+            padding: 0.5rem 0.875rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            line-height: 1.6;
             white-space: pre-wrap;
             word-wrap: break-word;
-            color: #212529;
-            /* Standard text color */
+            color: #2c3e50;
             pointer-events: none;
-            /* Let clicks pass through to textarea */
             overflow-y: auto;
             z-index: 1;
         }
 
         .editor-backdrop .comment {
-            color: #adb5bd;
-            /* Muted gray */
+            color: #95a5a6;
             text-decoration: line-through;
             font-style: italic;
         }
@@ -154,15 +266,13 @@
             left: 0;
             width: 100%;
             height: 100%;
-            padding: 0.375rem 0.75rem;
-            font-family: inherit;
-            font-size: 1rem;
-            line-height: 1.5;
+            padding: 0.5rem 0.875rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            line-height: 1.6;
             background: transparent !important;
             color: transparent !important;
-            /* Hide native text, show background */
-            caret-color: #000;
-            /* Keep the blinking cursor visible */
+            caret-color: #0078d4;
             border: none;
             resize: none;
             outline: none;
@@ -170,9 +280,26 @@
         }
 
         .editor-textarea::selection {
-            background-color: rgba(13, 110, 253, 0.25);
-            /* Bootstrap primary selection */
+            background-color: rgba(0, 120, 212, 0.25);
             color: transparent;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 280px;
+                position: absolute;
+                height: 100%;
+                z-index: 999;
+            }
+
+            .content-area {
+                padding: 16px;
+            }
+
+            .card {
+                margin-bottom: 16px !important;
+            }
         }
     </style>
 </head>
@@ -298,46 +425,106 @@
 
     <nav class="navbar">
         <div class="d-flex align-items-center w-100">
-            <button class="btn btn-sm btn-light border-0 me-2" id="sidebarToggle">☰</button>
-            <span class="fw-bold text-dark-emphasis">📡 CoA & Disconnect Manager</span>
+            <button class="btn btn-sm btn-light border-0 me-3 futuristic-btn" id="sidebarToggle"
+                style="border-radius: 10px; padding: 8px 12px; transition: all 0.3s;">☰</button>
+            <span class="fw-bold text-dark-emphasis" style="font-size: 1.1rem; letter-spacing: -0.3px;">📡 CoA &
+                Disconnect Manager</span>
             <div class="ms-auto">
-                <a href="/" class="btn btn-sm btn-outline-primary text-decoration-none">⬅ Back to Editor</a>
+                <a href="/" class="btn btn-sm btn-outline-primary text-decoration-none futuristic-btn"
+                    style="border-radius: 10px; padding: 8px 16px; font-weight: 500; transition: all 0.3s;">⬅ Back to
+                    Editor</a>
             </div>
         </div>
     </nav>
 
+    <style>
+        /* Futuristic Button Styles */
+        .futuristic-btn {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .futuristic-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(0, 120, 212, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .futuristic-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .futuristic-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 120, 212, 0.3);
+        }
+    </style>
+
     <div class="main-layout">
         <aside class="sidebar" id="sidebar">
-            <div class="px-3 py-2 border-bottom small fw-bold text-muted text-uppercase">Saved CoA files</div>
+            <div class="px-4 py-3 border-bottom small fw-bold text-muted text-uppercase"
+                style="letter-spacing: 1px; background: rgba(248, 249, 250, 0.5);">
+                <span style="display: inline-block; margin-right: 8px;">📁</span> Saved CoA Files
+            </div>
             <div class="explorer" id="coaExplorer">
                 {% for node in structure %}
                 <div class="file-item" data-filename="{{ node.name }}" onclick="selectCoaFile('{{ node.name }}', this)">
-                    <span>📄 {{ node.name }}</span>
-                    <span class="delete-btn" title="Delete" onclick="deleteCoA('{{ node.name }}', event)">🗑️</span>
+                    <span style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 16px;">📄</span>
+                        <span>{{ node.name }}</span>
+                    </span>
+                    <span class="delete-btn" title="Delete" onclick="deleteCoA('{{ node.name }}', event)"
+                        style="font-size: 16px; cursor: pointer;">🗑️</span>
                 </div>
                 {% endfor %}
             </div>
         </aside>
 
         <main class="content-area">
-            <div class="row">
-                <div class="col-md-5">
-                    <div class="card mb-4">
-                        <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
-                            <span class="fw-bold text-primary">Edit Attributes</span>
-                            <button class="btn btn-sm btn-success py-0 px-2" style="font-size: 11px;"
-                                onclick="createNewFile()">+ New File</button>
+            <div class="row g-4">
+                <div class="col-lg-5 col-md-12">
+                    <div class="card mb-4 futuristic-card">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                            <span class="fw-bold"
+                                style="color: #0078d4; font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 1.2rem;">✏️</span> Edit Attributes
+                            </span>
+                            <button class="btn btn-sm btn-success futuristic-action-btn"
+                                style="border-radius: 8px; padding: 6px 14px; font-size: 12px; font-weight: 600; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);"
+                                onclick="createNewFile()">
+                                <span style="font-size: 14px;">➕</span> New File
+                            </button>
                         </div>
-                        <div class="card-body">
-                            <label class="small text-muted mb-1">Filename</label>
-                            <input type="text" id="fileName" class="form-control mb-2" placeholder="e.g. coa1">
-                            <label class="small text-muted mb-1">Packet Contents</label>
+                        <div class="card-body" style="padding: 20px;">
+                            <label class="small fw-semibold mb-2"
+                                style="color: #5a6c7d; text-transform: uppercase; letter-spacing: 0.5px; font-size: 11px;">
+                                <span style="margin-right: 4px;">📝</span> Filename
+                            </label>
+                            <input type="text" id="fileName" class="form-control mb-3 futuristic-input"
+                                placeholder="e.g. coa1"
+                                style="border-radius: 10px; padding: 10px 14px; border: 1px solid rgba(222, 226, 230, 0.6); transition: all 0.3s;">
+
+                            <label class="small fw-semibold mb-2"
+                                style="color: #5a6c7d; text-transform: uppercase; letter-spacing: 0.5px; font-size: 11px;">
+                                <span style="margin-right: 4px;">📦</span> Packet Contents
+                            </label>
                             <div class="editor-wrapper">
                                 <div id="backdrop" class="editor-backdrop"></div>
                                 <textarea id="fileContent" class="editor-textarea" spellcheck="false"
                                     placeholder="User-Name = 'test'...."></textarea>
                             </div>
-                            <button class="btn btn-success w-100 mt-3" onclick="saveCoA()">Save File</button>
+                            <button class="btn btn-success w-100 mt-3 futuristic-save-btn" onclick="saveCoA()"
+                                style="border-radius: 10px; padding: 12px; font-weight: 600; font-size: 14px; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3); transition: all 0.3s;">
+                                <span style="font-size: 16px; margin-right: 6px;">💾</span> Save File
+                            </button>
                         </div>
                     </div>
                 </div>
