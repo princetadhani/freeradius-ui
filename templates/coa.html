@@ -10,7 +10,9 @@
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
     <style>
         /* Futuristic Base Styles */
         body {
@@ -23,7 +25,7 @@
             position: relative;
         }
 
-        /* Animated Background Pattern */
+        /* Animated Background Pattern with Floating Orbs */
         body::before {
             content: '';
             position: fixed;
@@ -32,10 +34,29 @@
             width: 100%;
             height: 100%;
             background:
-                radial-gradient(circle at 20% 50%, rgba(0, 120, 212, 0.03) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.03) 0%, transparent 50%);
+                radial-gradient(circle at 20% 50%, rgba(0, 120, 212, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 60% 20%, rgba(239, 68, 68, 0.03) 0%, transparent 50%);
+            background-size: 200% 200%;
+            animation: floatingBackground 25s ease-in-out infinite;
             pointer-events: none;
             z-index: 0;
+        }
+
+        @keyframes floatingBackground {
+
+            0%,
+            100% {
+                background-position: 0% 0%, 100% 100%, 50% 0%;
+            }
+
+            33% {
+                background-position: 100% 50%, 0% 50%, 80% 80%;
+            }
+
+            66% {
+                background-position: 50% 100%, 50% 0%, 20% 50%;
+            }
         }
 
         /* Glassmorphism Navbar */
@@ -157,9 +178,9 @@
             overflow-x: hidden;
         }
 
-        /* Futuristic Console */
+        /* Futuristic Console with Animated Background */
         .console {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            background: #000000;
             color: #00ff88;
             padding: 18px;
             font-family: 'JetBrains Mono', 'Courier New', monospace;
@@ -169,22 +190,92 @@
             white-space: pre-wrap;
             font-size: 13px;
             margin-top: 12px;
-            border: 1px solid rgba(0, 255, 136, 0.2);
+            border: 1px solid rgba(0, 255, 136, 0.3);
             box-shadow:
-                0 8px 32px rgba(0, 0, 0, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                inset 0 0 100px rgba(0, 255, 136, 0.03);
             position: relative;
             overflow: hidden;
         }
 
+        /* Animated floating particles background */
         .console::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.5), transparent);
+            width: 100%;
+            height: 100%;
+            background-image:
+                radial-gradient(circle at 20% 30%, rgba(0, 255, 136, 0.15) 0%, transparent 3%),
+                radial-gradient(circle at 60% 70%, rgba(0, 255, 136, 0.1) 0%, transparent 3%),
+                radial-gradient(circle at 80% 20%, rgba(0, 255, 136, 0.12) 0%, transparent 3%),
+                radial-gradient(circle at 40% 80%, rgba(0, 255, 136, 0.08) 0%, transparent 3%),
+                radial-gradient(circle at 90% 60%, rgba(0, 255, 136, 0.1) 0%, transparent 3%);
+            background-size: 200% 200%;
+            animation: floatingParticles 20s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Drifting wave effect */
+        .console::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 300%;
+            height: 100%;
+            background:
+                linear-gradient(90deg,
+                    transparent 0%,
+                    rgba(0, 255, 136, 0.03) 25%,
+                    rgba(0, 255, 136, 0.05) 50%,
+                    rgba(0, 255, 136, 0.03) 75%,
+                    transparent 100%);
+            animation: driftWave 15s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes floatingParticles {
+
+            0%,
+            100% {
+                background-position: 0% 0%, 100% 100%, 50% 50%, 80% 20%, 20% 80%;
+            }
+
+            25% {
+                background-position: 100% 50%, 0% 50%, 70% 70%, 30% 80%, 90% 10%;
+            }
+
+            50% {
+                background-position: 50% 100%, 50% 0%, 20% 30%, 90% 40%, 10% 90%;
+            }
+
+            75% {
+                background-position: 0% 50%, 100% 50%, 40% 80%, 60% 10%, 80% 30%;
+            }
+        }
+
+        @keyframes driftWave {
+            0% {
+                transform: translateX(0) translateY(0);
+            }
+
+            50% {
+                transform: translateX(33.33%) translateY(-10px);
+            }
+
+            100% {
+                transform: translateX(66.66%) translateY(0);
+            }
+        }
+
+        /* Ensure console text is above animated background */
+        .console>* {
+            position: relative;
+            z-index: 1;
         }
 
         /* Glassmorphism Cards */
@@ -466,6 +557,407 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 120, 212, 0.3);
         }
+
+        /* New File Button Styling */
+        .new-file-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border: none;
+            color: white;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .new-file-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .new-file-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .new-file-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .new-file-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        }
+
+        .new-file-btn svg {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .new-file-btn:hover svg {
+            transform: rotate(90deg);
+        }
+
+        /* Futuristic Input Fields */
+        .futuristic-input {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .futuristic-input:focus {
+            border-color: rgba(0, 120, 212, 0.6) !important;
+            box-shadow: 0 0 0 4px rgba(0, 120, 212, 0.1), 0 4px 12px rgba(0, 120, 212, 0.15) !important;
+            transform: translateY(-1px);
+        }
+
+        .futuristic-input:hover {
+            border-color: rgba(0, 120, 212, 0.4);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Save Button Enhancement */
+        .futuristic-save-btn {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border: none;
+        }
+
+        .futuristic-save-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .futuristic-save-btn:hover::before {
+            width: 400px;
+            height: 400px;
+        }
+
+        .futuristic-save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(16, 185, 129, 0.4) !important;
+        }
+
+        .futuristic-save-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Send Packet Button Styling */
+        .send-packet-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 15px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            border: none;
+            color: white;
+            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .send-packet-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .send-packet-btn:hover::before {
+            width: 400px;
+            height: 400px;
+        }
+
+        .send-packet-btn:not(:disabled):hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 28px rgba(239, 68, 68, 0.5);
+        }
+
+        .send-packet-btn:not(:disabled):active {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
+        }
+
+        .send-packet-btn:disabled {
+            background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+            box-shadow: none;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .send-packet-btn svg {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .send-packet-btn:not(:disabled):hover svg {
+            transform: translateX(4px) rotate(-15deg);
+        }
+
+        /* File Status Box Animation */
+        .file-status-box {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .file-status-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 120, 212, 0.15);
+        }
+
+        /* Scrollbar Styling for Console */
+        .console::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .console::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        .console::-webkit-scrollbar-thumb {
+            background: rgba(0, 255, 136, 0.3);
+            border-radius: 10px;
+            transition: background 0.3s;
+        }
+
+        .console::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 255, 136, 0.5);
+        }
+
+        /* Scrollbar for Sidebar */
+        .explorer::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .explorer::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        .explorer::-webkit-scrollbar-thumb {
+            background: rgba(0, 120, 212, 0.2);
+            border-radius: 10px;
+        }
+
+        .explorer::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 120, 212, 0.4);
+        }
+
+        /* Enhanced Responsive Design */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 280px;
+            }
+
+            .content-area {
+                padding: 20px;
+            }
+
+            .row.g-4 {
+                gap: 1.5rem !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: absolute;
+                height: 100%;
+                z-index: 999;
+                box-shadow: 8px 0 40px rgba(0, 0, 0, 0.15);
+            }
+
+            .content-area {
+                padding: 16px;
+            }
+
+            .card {
+                margin-bottom: 20px !important;
+            }
+
+            .navbar {
+                padding: 0.5rem 1rem;
+            }
+
+            .console {
+                height: 180px;
+            }
+
+            .editor-wrapper {
+                height: 250px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .content-area {
+                padding: 12px;
+            }
+
+            .card-body {
+                padding: 16px !important;
+            }
+
+            .console {
+                height: 160px;
+                font-size: 12px;
+            }
+
+            .file-item {
+                font-size: 12.5px;
+                padding: 10px 14px;
+            }
+        }
+
+        /* Smooth Transitions for All Interactive Elements */
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        button,
+        input,
+        select,
+        .file-item,
+        .card {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Pulse Animation for Active Elements */
+        @keyframes subtleGlow {
+
+            0%,
+            100% {
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
+            }
+
+            50% {
+                box-shadow: 0 12px 48px rgba(0, 120, 212, 0.12), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
+            }
+        }
+
+        .futuristic-card {
+            animation: subtleGlow 4s ease-in-out infinite;
+        }
+
+        /* Shimmer Effect on Hover */
+        .card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+            pointer-events: none;
+        }
+
+        .card:hover::after {
+            left: 100%;
+        }
+
+        /* Typing Indicator for Console */
+        @keyframes blink {
+
+            0%,
+            50% {
+                opacity: 1;
+            }
+
+            51%,
+            100% {
+                opacity: 0;
+            }
+        }
+
+        .typing-cursor {
+            display: inline-block;
+            width: 8px;
+            height: 14px;
+            background: #00ff88;
+            margin-left: 4px;
+            animation: blink 1s infinite;
+        }
+
+        /* Fade In Animation for Page Load */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .main-layout {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .card {
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        /* Enhance Select Dropdown */
+        select.futuristic-input {
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%230078d4' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+        }
+
+        /* Loading State for Buttons */
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .btn-loading::after {
+            content: '';
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            margin-left: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
     </style>
 
     <div class="main-layout">
@@ -497,10 +989,14 @@
                                 style="color: #0078d4; font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
                                 <span style="font-size: 1.2rem;">✏️</span> Edit Attributes
                             </span>
-                            <button class="btn btn-sm btn-success futuristic-action-btn"
-                                style="border-radius: 8px; padding: 6px 14px; font-size: 12px; font-weight: 600; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);"
-                                onclick="createNewFile()">
-                                <span style="font-size: 14px;">➕</span> New File
+                            <button class="btn btn-sm btn-success new-file-btn" onclick="createNewFile()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+                                    style="margin-right: 6px;">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                                <span>New File</span>
                             </button>
                         </div>
                         <div class="card-body" style="padding: 20px;">
@@ -529,39 +1025,69 @@
                     </div>
                 </div>
 
-                <div class="col-md-7">
-                    <div class="card mb-3">
-                        <div class="card-header bg-white fw-bold text-danger">Execute Command</div>
-                        <div class="card-body">
-                            <div class="row g-2 mb-3">
-                                <div class="col-md-4">
-                                    <label class="small fw-bold">NAS IP Address</label>
-                                    <input type="text" id="nasIp" class="form-control" value="10.86.203.18">
+                <div class="col-lg-7 col-md-12">
+                    <div class="card mb-3 futuristic-card">
+                        <div class="card-header bg-white d-flex align-items-center" style="gap: 10px;">
+                            <span style="font-size: 1.3rem;">🚀</span>
+                            <span class="fw-bold" style="color: #dc3545; font-size: 1.05rem;">Execute Command</span>
+                        </div>
+                        <div class="card-body" style="padding: 20px;">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4 col-sm-12">
+                                    <label class="small fw-semibold mb-2"
+                                        style="color: #5a6c7d; text-transform: uppercase; letter-spacing: 0.5px; font-size: 11px;">
+                                        <span style="margin-right: 4px;">🌐</span> NAS IP Address
+                                    </label>
+                                    <input type="text" id="nasIp" class="form-control futuristic-input"
+                                        value="10.86.203.18"
+                                        style="border-radius: 10px; padding: 10px 14px; border: 1px solid rgba(222, 226, 230, 0.6); transition: all 0.3s;">
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="small fw-bold">Shared Secret</label>
-                                    <input type="text" id="secret" class="form-control" value="prince">
+                                <div class="col-md-4 col-sm-12">
+                                    <label class="small fw-semibold mb-2"
+                                        style="color: #5a6c7d; text-transform: uppercase; letter-spacing: 0.5px; font-size: 11px;">
+                                        <span style="margin-right: 4px;">🔐</span> Shared Secret
+                                    </label>
+                                    <input type="text" id="secret" class="form-control futuristic-input" value="prince"
+                                        style="border-radius: 10px; padding: 10px 14px; border: 1px solid rgba(222, 226, 230, 0.6); transition: all 0.3s;">
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="small fw-bold">Request Type</label>
-                                    <select id="requestType" class="form-select">
+                                <div class="col-md-4 col-sm-12">
+                                    <label class="small fw-semibold mb-2"
+                                        style="color: #5a6c7d; text-transform: uppercase; letter-spacing: 0.5px; font-size: 11px;">
+                                        <span style="margin-right: 4px;">⚙️</span> Request Type
+                                    </label>
+                                    <select id="requestType" class="form-select futuristic-input"
+                                        style="border-radius: 10px; padding: 10px 14px; border: 1px solid rgba(222, 226, 230, 0.6); transition: all 0.3s;">
                                         <option value="coa">CoA</option>
                                         <option value="disconnect">Disconnect</option>
                                     </select>
                                 </div>
                             </div>
-                            <div
-                                class="p-2 mb-3 bg-light border rounded small d-flex justify-content-between align-items-center">
-                                <span>CoA File Use For Command Argument: <strong id="selectedDisplay"
-                                        class="text-primary">None</strong></span>
+                            <div class="file-status-box p-3 mb-3 rounded"
+                                style="background: linear-gradient(135deg, rgba(231, 243, 255, 0.5), rgba(179, 215, 255, 0.2)); border: 1px solid rgba(0, 120, 212, 0.2); border-radius: 10px;">
+                                <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                    <span style="font-size: 18px;">📋</span>
+                                    <span style="color: #5a6c7d;">Selected File:</span>
+                                    <strong id="selectedDisplay" style="color: #0078d4; font-weight: 600;">None</strong>
+                                </div>
                             </div>
                             <input type="hidden" id="selectedFileName">
-                            <button class="btn btn-danger w-100 fw-bold py-2" id="sendBtn" onclick="sendCoA()" disabled>
-                                Send Packet
+                            <button class="btn btn-danger w-100 fw-bold send-packet-btn" id="sendBtn"
+                                onclick="sendCoA()" disabled>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    style="margin-right: 8px;">
+                                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                </svg>
+                                <span>Send Packet</span>
                             </button>
                         </div>
                     </div>
-                    <div class="fw-bold small text-muted px-1">TERMINAL OUTPUT</div>
+                    <div class="d-flex align-items-center gap-2 mb-2 px-1">
+                        <span style="font-size: 1.2rem;">💻</span>
+                        <span class="fw-bold small text-muted"
+                            style="text-transform: uppercase; letter-spacing: 1px;">Terminal Output</span>
+                    </div>
                     <div id="output" class="console">System ready. Select a file to send or create a new one.</div>
                 </div>
             </div>
