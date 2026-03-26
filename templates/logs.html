@@ -2,188 +2,204 @@
 <html>
 
 <head>
+    <meta charset="UTF-8">
+    <title>Logs Viewer</title>
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Favicon -->
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
 
-<style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-body{
-height:100vh;
-display:flex;
-flex-direction:column;
-}
+    <style>
+        body {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
 
-#logViewer{
+        #logViewer {
 
-flex-grow:1;
-overflow:auto;
-background:#111;
-color:#ddd;
-font-family:monospace;
-padding:10px;
-white-space:pre;
-}
+            flex-grow: 1;
+            overflow: auto;
+            background: #111;
+            color: #ddd;
+            font-family: monospace;
+            padding: 10px;
+            white-space: pre;
+        }
 
-.error{color:#ff5c5c;}
-.warn{color:#ffb347;}
-.accept{color:#7CFC00;}
-.request{color:#00bfff;}
+        .error {
+            color: #ff5c5c;
+        }
 
-</style>
+        .warn {
+            color: #ffb347;
+        }
+
+        .accept {
+            color: #7CFC00;
+        }
+
+        .request {
+            color: #00bfff;
+        }
+    </style>
 
 </head>
 
 <body>
 
-<nav class="navbar navbar-light bg-light px-3">
+    <nav class="navbar navbar-light bg-light px-3">
 
-<span class="fw-bold">FreeRADIUS Logs</span>
+        <span class="fw-bold">FreeRADIUS Logs</span>
 
-<div class="ms-auto d-flex gap-2">
+        <div class="ms-auto d-flex gap-2">
 
-<input id="searchBox" class="form-control form-control-sm" placeholder="Search">
+            <input id="searchBox" class="form-control form-control-sm" placeholder="Search">
 
-<button class="btn btn-sm btn-outline-primary" onclick="loadLogs()">Refresh</button>
+            <button class="btn btn-sm btn-outline-primary" onclick="loadLogs()">Refresh</button>
 
-<button id="liveBtn" class="btn btn-sm btn-success" onclick="toggleLive()">Live</button>
+            <button id="liveBtn" class="btn btn-sm btn-success" onclick="toggleLive()">Live</button>
 
-<button class="btn btn-sm btn-secondary" onclick="scrollBottom()">Bottom</button>
+            <button class="btn btn-sm btn-secondary" onclick="scrollBottom()">Bottom</button>
 
-<a href="/" class="btn btn-sm btn-outline-dark">Back</a>
+            <a href="/" class="btn btn-sm btn-outline-dark">Back</a>
 
-</div>
+        </div>
 
-</nav>
+    </nav>
 
-<div id="logViewer"></div>
+    <div id="logViewer"></div>
 
-<script>
+    <script>
 
-let offset = 0
-let live = false
-let interval = null
+        let offset = 0
+        let live = false
+        let interval = null
 
-const viewer = document.getElementById("logViewer")
+        const viewer = document.getElementById("logViewer")
 
-let logBuffer = []
+        let logBuffer = []
 
-function colorize(line){
+        function colorize(line) {
 
-if(line.includes("Access-Reject")) return `<span class="error">${line}</span>`
-if(line.includes("WARNING")) return `<span class="warn">${line}</span>`
-if(line.includes("Access-Accept")) return `<span class="accept">${line}</span>`
-if(line.includes("Access-Request")) return `<span class="request">${line}</span>`
+            if (line.includes("Access-Reject")) return `<span class="error">${line}</span>`
+            if (line.includes("WARNING")) return `<span class="warn">${line}</span>`
+            if (line.includes("Access-Accept")) return `<span class="accept">${line}</span>`
+            if (line.includes("Access-Request")) return `<span class="request">${line}</span>`
 
-return line
+            return line
 
-}
+        }
 
 
-/* STREAM STYLE APPEND */
+        /* STREAM STYLE APPEND */
 
-function appendLogs(text){
+        function appendLogs(text) {
 
-const search = document.getElementById("searchBox").value.toLowerCase()
+            const search = document.getElementById("searchBox").value.toLowerCase()
 
-if(text.trim() === ""){
-viewer.innerHTML += "\n"
-return
-}
+            if (text.trim() === "") {
+                viewer.innerHTML += "\n"
+                return
+            }
 
-const lines = text.split("\n")
+            const lines = text.split("\n")
 
-lines.forEach(line => {
+            lines.forEach(line => {
 
-if(line.trim() === "") return
+                if (line.trim() === "") return
 
-logBuffer.push(line)
+                logBuffer.push(line)
 
-if(search && !line.toLowerCase().includes(search)) return
+                if (search && !line.toLowerCase().includes(search)) return
 
-viewer.innerHTML += colorize(line) + "\n"
+                viewer.innerHTML += colorize(line) + "\n"
 
-})
+            })
 
-}
+        }
 
 
-/* FETCH LOGS */
+        /* FETCH LOGS */
 
-function loadLogs(){
+        function loadLogs() {
 
-fetch(`/logs/tail?offset=${offset}`)
-.then(r => r.json())
-.then(data => {
+            fetch(`/logs/tail?offset=${offset}`)
+                .then(r => r.json())
+                .then(data => {
 
-appendLogs(data.content)
+                    appendLogs(data.content)
 
-offset = data.offset
+                    offset = data.offset
 
-if(live) scrollBottom()
+                    if (live) scrollBottom()
 
-})
+                })
 
-}
+        }
 
 
-/* SCROLL */
+        /* SCROLL */
 
-function scrollBottom(){
-viewer.scrollTop = viewer.scrollHeight
-}
+        function scrollBottom() {
+            viewer.scrollTop = viewer.scrollHeight
+        }
 
 
-/* LIVE MODE */
+        /* LIVE MODE */
 
-function toggleLive(){
+        function toggleLive() {
 
-live = !live
+            live = !live
 
-const btn = document.getElementById("liveBtn")
+            const btn = document.getElementById("liveBtn")
 
-if(live){
+            if (live) {
 
-btn.textContent="Pause"
-btn.classList.replace("btn-success","btn-danger")
+                btn.textContent = "Pause"
+                btn.classList.replace("btn-success", "btn-danger")
 
-interval=setInterval(loadLogs,1500)
+                interval = setInterval(loadLogs, 1500)
 
-}else{
+            } else {
 
-btn.textContent="Live"
-btn.classList.replace("btn-danger","btn-success")
+                btn.textContent = "Live"
+                btn.classList.replace("btn-danger", "btn-success")
 
-clearInterval(interval)
+                clearInterval(interval)
 
-}
+            }
 
-}
+        }
 
 
-/* SEARCH REBUILD */
+        /* SEARCH REBUILD */
 
-document.getElementById("searchBox").addEventListener("input", function(){
+        document.getElementById("searchBox").addEventListener("input", function () {
 
-viewer.innerHTML = ""
+            viewer.innerHTML = ""
 
-const search = this.value.toLowerCase()
+            const search = this.value.toLowerCase()
 
-logBuffer.forEach(line => {
+            logBuffer.forEach(line => {
 
-if(search && !line.toLowerCase().includes(search)) return
+                if (search && !line.toLowerCase().includes(search)) return
 
-viewer.innerHTML += colorize(line) + "\n"
+                viewer.innerHTML += colorize(line) + "\n"
 
-})
+            })
 
-})
+        })
 
 
-/* INITIAL LOAD */
+        /* INITIAL LOAD */
 
-loadLogs()
+        loadLogs()
 
-</script>
+    </script>
 
 </body>
+
 </html>
