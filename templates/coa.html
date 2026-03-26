@@ -198,7 +198,7 @@
             overflow: hidden;
         }
 
-        /* Animated floating particles background */
+        /* Animated floating particles background with random movement */
         .console::before {
             content: '';
             position: absolute;
@@ -207,33 +207,42 @@
             width: 100%;
             height: 100%;
             background-image:
-                radial-gradient(circle at 20% 30%, rgba(0, 255, 136, 0.15) 0%, transparent 3%),
-                radial-gradient(circle at 60% 70%, rgba(0, 255, 136, 0.1) 0%, transparent 3%),
-                radial-gradient(circle at 80% 20%, rgba(0, 255, 136, 0.12) 0%, transparent 3%),
-                radial-gradient(circle at 40% 80%, rgba(0, 255, 136, 0.08) 0%, transparent 3%),
-                radial-gradient(circle at 90% 60%, rgba(0, 255, 136, 0.1) 0%, transparent 3%);
-            background-size: 200% 200%;
-            animation: floatingParticles 20s ease-in-out infinite;
+                radial-gradient(circle at 20% 30%, rgba(0, 255, 136, 0.15) 0%, transparent 2%),
+                radial-gradient(circle at 60% 70%, rgba(0, 255, 136, 0.12) 0%, transparent 2.5%),
+                radial-gradient(circle at 80% 20%, rgba(0, 255, 136, 0.1) 0%, transparent 2%),
+                radial-gradient(circle at 40% 80%, rgba(0, 255, 136, 0.13) 0%, transparent 3%),
+                radial-gradient(circle at 90% 60%, rgba(0, 255, 136, 0.11) 0%, transparent 2%),
+                radial-gradient(circle at 15% 85%, rgba(0, 255, 136, 0.08) 0%, transparent 2%),
+                radial-gradient(circle at 70% 40%, rgba(0, 255, 136, 0.09) 0%, transparent 2.5%),
+                radial-gradient(circle at 35% 15%, rgba(0, 255, 136, 0.14) 0%, transparent 2%),
+                radial-gradient(circle at 95% 35%, rgba(0, 255, 136, 0.1) 0%, transparent 3%),
+                radial-gradient(circle at 50% 90%, rgba(0, 255, 136, 0.12) 0%, transparent 2%);
+            background-size: 300% 300%;
+            animation: floatingParticles 18s ease-in-out infinite;
             pointer-events: none;
             z-index: 0;
         }
 
-        /* Drifting wave effect */
+        /* Drifting wave effect with multiple layers */
         .console::after {
             content: '';
             position: absolute;
             top: 0;
             left: -100%;
-            width: 300%;
+            width: 400%;
             height: 100%;
             background:
                 linear-gradient(90deg,
                     transparent 0%,
-                    rgba(0, 255, 136, 0.03) 25%,
-                    rgba(0, 255, 136, 0.05) 50%,
-                    rgba(0, 255, 136, 0.03) 75%,
-                    transparent 100%);
-            animation: driftWave 15s linear infinite;
+                    rgba(0, 255, 136, 0.02) 15%,
+                    rgba(0, 255, 136, 0.04) 30%,
+                    rgba(0, 255, 136, 0.06) 45%,
+                    rgba(0, 255, 136, 0.04) 60%,
+                    rgba(0, 255, 136, 0.02) 75%,
+                    transparent 100%),
+                radial-gradient(ellipse at 25% 50%, rgba(0, 255, 136, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 75% 50%, rgba(0, 255, 136, 0.03) 0%, transparent 50%);
+            animation: driftWave 12s linear infinite;
             pointer-events: none;
             z-index: 0;
         }
@@ -242,33 +251,55 @@
 
             0%,
             100% {
-                background-position: 0% 0%, 100% 100%, 50% 50%, 80% 20%, 20% 80%;
+                background-position:
+                    0% 0%, 100% 100%, 50% 50%, 80% 20%, 20% 80%,
+                    30% 60%, 70% 30%, 10% 40%, 90% 70%, 45% 85%;
             }
 
-            25% {
-                background-position: 100% 50%, 0% 50%, 70% 70%, 30% 80%, 90% 10%;
+            20% {
+                background-position:
+                    30% 20%, 70% 80%, 90% 40%, 20% 60%, 50% 10%,
+                    80% 70%, 15% 50%, 60% 90%, 40% 25%, 85% 55%;
             }
 
-            50% {
-                background-position: 50% 100%, 50% 0%, 20% 30%, 90% 40%, 10% 90%;
+            40% {
+                background-position:
+                    60% 50%, 40% 60%, 80% 80%, 10% 30%, 90% 20%,
+                    25% 85%, 75% 15%, 50% 70%, 5% 45%, 95% 10%;
             }
 
-            75% {
-                background-position: 0% 50%, 100% 50%, 40% 80%, 60% 10%, 80% 30%;
+            60% {
+                background-position:
+                    90% 70%, 10% 40%, 40% 20%, 70% 90%, 30% 50%,
+                    60% 10%, 20% 80%, 85% 35%, 15% 65%, 55% 25%;
+            }
+
+            80% {
+                background-position:
+                    50% 90%, 80% 20%, 20% 70%, 60% 40%, 10% 10%,
+                    90% 50%, 40% 30%, 30% 85%, 75% 60%, 15% 15%;
             }
         }
 
         @keyframes driftWave {
             0% {
-                transform: translateX(0) translateY(0);
+                transform: translateX(0) translateY(0) scale(1);
+            }
+
+            25% {
+                transform: translateX(25%) translateY(-8px) scale(1.02);
             }
 
             50% {
-                transform: translateX(33.33%) translateY(-10px);
+                transform: translateX(50%) translateY(5px) scale(0.98);
+            }
+
+            75% {
+                transform: translateX(75%) translateY(-3px) scale(1.01);
             }
 
             100% {
-                transform: translateX(66.66%) translateY(0);
+                transform: translateX(100%) translateY(0) scale(1);
             }
         }
 
@@ -312,7 +343,8 @@
             border: 1px solid rgba(222, 226, 230, 0.6);
             border-radius: 12px;
             background: rgba(255, 255, 255, 0.95);
-            height: 290px;
+            flex: 1;
+            min-height: 280px;
             overflow: hidden;
             box-shadow:
                 0 4px 20px rgba(0, 0, 0, 0.06),
@@ -773,6 +805,48 @@
             background: rgba(0, 120, 212, 0.4);
         }
 
+        /* Equal Height Cards */
+        .row.g-4 {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .row.g-4>[class*='col-'] {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .row.g-4 .card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .row.g-4 .card-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Make Edit Attributes card match Execute Command height */
+        .edit-attributes-card {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .edit-attributes-card .card-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .execute-command-section {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
         /* Enhanced Responsive Design */
         @media (max-width: 992px) {
             .sidebar {
@@ -785,6 +859,10 @@
 
             .row.g-4 {
                 gap: 1.5rem !important;
+            }
+
+            .edit-attributes-card {
+                min-height: auto;
             }
         }
 
@@ -813,7 +891,15 @@
             }
 
             .editor-wrapper {
-                height: 250px;
+                min-height: 220px !important;
+            }
+
+            .edit-attributes-card {
+                min-height: auto !important;
+            }
+
+            .row.g-4 {
+                gap: 1rem !important;
             }
         }
 
@@ -834,6 +920,54 @@
             .file-item {
                 font-size: 12.5px;
                 padding: 10px 14px;
+            }
+
+            .editor-wrapper {
+                min-height: 200px !important;
+            }
+
+            .send-packet-btn,
+            .futuristic-save-btn {
+                font-size: 13px !important;
+                padding: 10px !important;
+            }
+        }
+
+        /* Large screen optimization */
+        @media (min-width: 1400px) {
+            .content-area {
+                padding: 32px;
+            }
+
+            .edit-attributes-card {
+                min-height: 650px;
+            }
+
+            .editor-wrapper {
+                min-height: 320px;
+            }
+
+            .console {
+                height: 240px;
+            }
+        }
+
+        /* Ultra-wide screen optimization */
+        @media (min-width: 1920px) {
+            .sidebar {
+                width: 320px;
+            }
+
+            .edit-attributes-card {
+                min-height: 700px;
+            }
+
+            .editor-wrapper {
+                min-height: 360px;
+            }
+
+            .console {
+                height: 280px;
             }
         }
 
@@ -983,7 +1117,7 @@
         <main class="content-area">
             <div class="row g-4">
                 <div class="col-lg-5 col-md-12">
-                    <div class="card mb-4 futuristic-card">
+                    <div class="card mb-4 futuristic-card edit-attributes-card">
                         <div class="card-header bg-white d-flex justify-content-between align-items-center">
                             <span class="fw-bold"
                                 style="color: #0078d4; font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
@@ -1026,7 +1160,7 @@
                 </div>
 
                 <div class="col-lg-7 col-md-12">
-                    <div class="card mb-3 futuristic-card">
+                    <div class="card mb-3 futuristic-card execute-command-section">
                         <div class="card-header bg-white d-flex align-items-center" style="gap: 10px;">
                             <span style="font-size: 1.3rem;">🚀</span>
                             <span class="fw-bold" style="color: #dc3545; font-size: 1.05rem;">Execute Command</span>
@@ -1115,6 +1249,22 @@
                 localStorage.setItem(id, e.target.value);
             });
         });
+
+        // Update button text when request type changes
+        document.getElementById('requestType').addEventListener('change', function () {
+            const selectedFile = document.getElementById('selectedFileName').value;
+            if (selectedFile) {
+                const reqType = this.value.toUpperCase();
+                document.getElementById('sendBtn').innerHTML = `
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                    <span>Send ${reqType} Request with <strong>${selectedFile}</strong></span>
+                `;
+            }
+        });
+
         function createNewFile() {
             document.querySelectorAll('.file-item').forEach(i => i.classList.remove('active'));
             document.getElementById('fileName').value = "";
@@ -1122,6 +1272,13 @@
             document.getElementById('selectedFileName').value = "";
             document.getElementById('selectedDisplay').innerText = "None (Creating new)";
             document.getElementById('sendBtn').disabled = true;
+            document.getElementById('sendBtn').innerHTML = `
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+                <span>Send Packet</span>
+            `;
             document.getElementById('output').textContent = "Ready to create new file.";
             document.getElementById('fileName').focus();
             updateEditor();
@@ -1134,7 +1291,16 @@
             document.getElementById('selectedFileName').value = name;
             document.getElementById('selectedDisplay').innerText = name;
             document.getElementById('sendBtn').disabled = false;
-            document.getElementById('sendBtn').innerHTML = `🚀 Send <strong>${name}</strong>`;
+
+            // Update button with proper formatted text
+            const reqType = document.getElementById('requestType').value.toUpperCase();
+            document.getElementById('sendBtn').innerHTML = `
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+                <span>Send ${reqType} Request with <strong>${name}</strong></span>
+            `;
 
             fetch(`/get_file_content?path=coa/${name}`)
                 .then(res => res.json()).then(data => {
@@ -1168,7 +1334,17 @@
                         document.getElementById('selectedFileName').value = fullFilename;
                         document.getElementById('selectedDisplay').innerText = fullFilename;
                         document.getElementById('sendBtn').disabled = false;
-                        document.getElementById('sendBtn').innerHTML = `🚀 Send <strong>${fullFilename}</strong>`;
+
+                        // Update button with proper formatted text
+                        const reqType = document.getElementById('requestType').value.toUpperCase();
+                        document.getElementById('sendBtn').innerHTML = `
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                            </svg>
+                            <span>Send ${reqType} Request with <strong>${fullFilename}</strong></span>
+                        `;
+
                         document.getElementById('output').textContent = `${fullFilename} saved and ready to send.`;
                     } else {
                         showToast('Failed', 'Failed to save file.', 'error');
