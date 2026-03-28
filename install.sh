@@ -48,19 +48,29 @@ else
     RADIUS_GROUP="freerad"
 fi
 
-# -------------------------------------------------
-# Permissions
-# -------------------------------------------------
-echo "🔐 Setting permissions..."
+# Add our app user to the FreeRADIUS group so it inherits native group permissions
+sudo usermod -aG $RADIUS_GROUP $APP_USER
 
+# -------------------------------------------------
+# Group Permissions Fix (Eliminates the need for sudo cp)
+# -------------------------------------------------
+echo "🔐 Setting secure group permissions..."
+
+# Create CoA directory
 sudo mkdir -p /etc/freeradius/3.0/coa
 
-sudo chown -R $APP_USER:$RADIUS_GROUP /etc/freeradius/3.0/coa
-sudo chmod -R 775 /etc/freeradius/3.0/coa
+# Give the FreeRADIUS group ownership of the entire config tree
+sudo chown -R root:$RADIUS_GROUP /etc/freeradius/3.0
 
-sudo chown :$RADIUS_GROUP /etc/freeradius/3.0/users
-sudo chmod 664 /etc/freeradius/3.0/users
+# Allow the group to write to ALL directories (to create new files) EXCEPT certs
+sudo find /etc/freeradius/3.0 -type d -not -path "*/certs*" -exec chmod 775 {} +
 
+# Allow the group to write to ALL files (to edit existing files) EXCEPT certs
+sudo find /etc/freeradius/3.0 -type f -not -path "*/certs*" -exec chmod 664 {} +
+
+# Let the UI read the logs natively
+sudo chown -R freerad:$RADIUS_GROUP /var/log/freeradius
+sudo chmod -R 775 /var/log/freeradius
 # -------------------------------------------------
 # Python virtual environment
 # -------------------------------------------------
@@ -76,15 +86,16 @@ if [ -f "requirements.txt" ]; then
 fi
 
 # -------------------------------------------------
-# Sudoers permissions
+# Sudoers permissions (Minimized for Security!)
 # -------------------------------------------------
-echo "🛡️ Configuring sudo permissions..."
+echo "🛡️ Configuring minimal sudo permissions..."
 
+# We ONLY grant what is strictly needed for Python's subprocess calls
 cat <<EOF | sudo tee $SUDOERS_FILE >/dev/null
-$APP_USER ALL=(ALL) NOPASSWD: /usr/sbin/tcpdump
-$APP_USER ALL=(ALL) NOPASSWD: /bin/cp /etc/freeradius/3.0/users /tmp/users
-$APP_USER ALL=(ALL) NOPASSWD: /bin/cp /tmp/users /etc/freeradius/3.0/users
-$APP_USER ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart freeradius
+$APP_USER ALL=(ALL) NOPASSWD: /usr/sbin/freeradius -C
+$APP_USER ALL=(ALL) NOPASSWD: /usr/bin/radclient
+$APP_USER ALL=(ALL) NOPASSWD: /bin/systemctl restart freeradius
+$APP_USER ALL=(ALL) NOPASSWD: /bin/systemctl is-active freeradius
 EOF
 
 sudo chmod 0440 $SUDOERS_FILE
@@ -94,14 +105,17 @@ sudo chmod 0440 $SUDOERS_FILE
 # -------------------------------------------------
 echo "⚙️ Creating systemd service..."
 
+# Added UMask=0002 so any NEW files created by the app inherit rw-rw-r--
+# allowing FreeRADIUS to read them.
 sudo tee $SERVICE_FILE >/dev/null <<EOF
 [Unit]
-Description=FreeRADIUS Users Web UI
+Description=FreeRADIUS Admin Web UI
 After=network.target freeradius.service
 
 [Service]
 User=$APP_USER
 Group=$RADIUS_GROUP
+UMask=0002
 WorkingDirectory=$APP_DIR
 ExecStart=$VENV_DIR/bin/python app.py
 Restart=always
@@ -119,6 +133,9 @@ sudo systemctl daemon-reload
 sudo systemctl enable freeradius --now
 sudo systemctl enable freeradius-ui --now
 
+# Restart the UI one last time to ensure it picks up the new group memberships
+sudo systemctl restart freeradius-ui
+
 # -------------------------------------------------
 # Detect server IP
 # -------------------------------------------------
@@ -128,6 +145,6 @@ echo ""
 echo "🎉 Installation Completed!"
 echo "-------------------------------------"
 echo "📡 Server IP : $SERVER_IP"
-echo "🌐 Web UI    : http://$SERVER_IP:5000"
+echo "🌐 Web UI    : http://$SERVER_IP:8888"
 echo "-------------------------------------"
-echo "You can manage FreeRADIUS users from the web UI."
+echo "You can manage FreeRADIUS configuration securely from the web UI."

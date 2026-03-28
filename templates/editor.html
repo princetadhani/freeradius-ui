@@ -846,8 +846,9 @@
     <!-- End Main Content -->
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/shell/shell.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/nginx/nginx.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/properties/properties.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -921,27 +922,29 @@
 
 
         function loadFile(path, el) {
-
             fetch(`/get_file_content?path=${path}`)
-
                 .then(res => res.json())
-
                 .then(data => {
-
                     editor.setValue(data.content);
-
                     currentPath = data.path;
-
                     document.getElementById('currentFilePath').textContent = `/etc/freeradius/3.0/${currentPath}`;
-
                     document.querySelectorAll('.file-item').forEach(i => i.classList.remove('active'));
-
                     el.classList.add('active');
 
+                    // --- NEW: Dynamic Syntax Highlighting ---
+                    let fileName = currentPath.toLowerCase();
+                    if (fileName.endsWith('.conf') || fileName.includes('sites-enabled') || fileName.includes('mods-enabled')) {
+                        editor.setOption("mode", "nginx"); // Nginx mode handles FreeRADIUS { } blocks perfectly
+                    } else if (fileName.endsWith('users') || fileName.endsWith('.txt')) {
+                        editor.setOption("mode", "properties"); // Good for key/value pairs
+                    } else if (fileName.endsWith('.sh')) {
+                        editor.setOption("mode", "shell");
+                    } else {
+                        editor.setOption("mode", "null"); // Plain text fallback
+                    }
+
                     setMode(currentMode);
-
                 });
-
         }
 
 
