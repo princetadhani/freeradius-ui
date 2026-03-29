@@ -612,6 +612,70 @@
         }
 
         /* Responsive Design */
+        /* Theme Toggle Button */
+        .theme-toggle {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: rgba(107, 114, 128, 0.2);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(107, 114, 128, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 6px;
+            overflow: hidden;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(107, 114, 128, 0.3);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .theme-toggle-slider {
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: linear-gradient(135deg, #0078d4 0%, #0058a3 100%);
+            border-radius: 50%;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            left: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        [data-bs-theme="dark"] .theme-toggle-slider {
+            transform: translateX(30px);
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .theme-icon {
+            font-size: 14px;
+            z-index: 1;
+            transition: opacity 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        .theme-icon.sun {
+            opacity: 1;
+        }
+
+        .theme-icon.moon {
+            opacity: 0.5;
+        }
+
+        [data-bs-theme="dark"] .theme-icon.sun {
+            opacity: 0.5;
+        }
+
+        [data-bs-theme="dark"] .theme-icon.moon {
+            opacity: 1;
+        }
+
         @media (max-width: 992px) {
             .sidebar {
                 width: 260px;
@@ -645,6 +709,24 @@
             .btn-sm {
                 font-size: 11px;
                 padding: 4px 8px;
+            }
+
+            .theme-toggle {
+                width: 50px;
+                height: 26px;
+            }
+
+            .theme-toggle-slider {
+                width: 18px;
+                height: 18px;
+            }
+
+            [data-bs-theme="dark"] .theme-toggle-slider {
+                transform: translateX(24px);
+            }
+
+            .theme-icon {
+                font-size: 12px;
             }
         }
 
@@ -771,7 +853,11 @@
                         <button class="btn btn-outline-primary" id="editBtn" onclick="setMode('edit')">Edit</button>
                     </div>
 
-                    <button class="btn btn-sm btn-light border" id="themeToggle">🌓</button>
+                    <div class="theme-toggle" id="themeToggle" title="Toggle Dark/Light Theme">
+                        <span class="theme-icon sun">☀️</span>
+                        <div class="theme-toggle-slider"></div>
+                        <span class="theme-icon moon">🌙</span>
+                    </div>
 
                 </div>
 
@@ -1631,7 +1717,16 @@
 
         }
 
-        document.getElementById('themeToggle').onclick = () => setTheme(document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark');
+        document.getElementById('themeToggle').onclick = () => {
+            const newTheme = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+
+            // Add smooth transition
+            document.body.style.transition = 'background 0.3s ease';
+            setTimeout(() => {
+                document.body.style.transition = '';
+            }, 300);
+        };
 
         setTheme(localStorage.getItem('fr-theme') || 'light');
 
