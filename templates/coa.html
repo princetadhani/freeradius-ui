@@ -553,9 +553,10 @@
             <span class="fw-bold text-dark-emphasis" style="font-size: 1.1rem; letter-spacing: -0.3px;">📡 CoA &
                 Disconnect Manager</span>
             <div class="ms-auto">
-                <a href="/" class="btn btn-sm btn-outline-primary text-decoration-none futuristic-btn"
-                    style="border-radius: 10px; padding: 8px 16px; font-weight: 500; transition: all 0.3s;">⬅ Back to
-                    Editor</a>
+                <a href="/" class="modern-btn btn-secondary-modern text-decoration-none">
+                    <span>🏠</span>
+                    <span class="btn-text">Back</span>
+                </a>
             </div>
         </div>
     </nav>
@@ -588,6 +589,72 @@
         .futuristic-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 120, 212, 0.3);
+        }
+
+        /* Modern Buttons for Back Navigation */
+        .modern-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+
+        .modern-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .modern-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .modern-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .modern-btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary-modern {
+            background: rgba(107, 114, 128, 0.1);
+            color: #4b5563;
+            border: 1px solid rgba(107, 114, 128, 0.2);
+        }
+
+        .btn-secondary-modern:hover {
+            background: rgba(107, 114, 128, 0.2);
+            color: #374151;
+        }
+
+        /* Responsive text hiding for modern buttons */
+        @media (max-width: 768px) {
+            .modern-btn .btn-text {
+                display: none;
+            }
+
+            .modern-btn {
+                padding: 8px 12px;
+            }
         }
 
         /* New File Button Styling */
