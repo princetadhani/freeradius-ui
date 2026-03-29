@@ -71,24 +71,39 @@ def save():
     content = data.get('content')
     
     try:
-        # SECURE: Path traversal check
         full_path = get_safe_path(BASE_DIR, path)
         
-        # Write natively! No sudo cp needed because of correct Linux Group permissions
+        # 1. Write the file
         with open(full_path, 'w') as f:
             f.write(content)
 
-        # Check config syntax first
+        # 2. Run config test
         check = subprocess.run(["sudo", "freeradius", "-C"], capture_output=True, text=True)
+        
         if check.returncode != 0:
-            return jsonify({"status": "error", "message": "Config test failed! Revert changes.", "output": check.stderr}), 400
+            error_output = check.stderr.lower()
+            
+            # Check if the failure is actually a SUDO / Permission issue
+            if "password is required" in error_output or "terminal is required" in error_output:
+                return jsonify({
+                    "status": "error",
+                    "message": "System Permission Error: Web UI is not allowed to run sudo commands. Check sudoers file.",
+                    "output": check.stderr
+                }), 500 # Use 500 for system-level failures
 
+            # If it's not sudo, then it's actually a FreeRADIUS config error
+            return jsonify({
+                "status": "error",
+                "message": "Config Syntax Error! Please fix your entries and try again.",
+                "output": check.stderr
+            }), 400
+
+        # 3. If test passes, restart service
         subprocess.run(["sudo", "systemctl", "restart", "freeradius"])
         return jsonify({"status": "success"})
-    except ValueError as ve:
-        return jsonify({"status": "error", "message": str(ve)}), 403
+
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"status": "error", "message": f"Server Error: {str(e)}"}), 500
 
 # --- CoA Manager Routes ---
 
