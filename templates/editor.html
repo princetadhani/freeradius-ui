@@ -23,6 +23,9 @@
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/material-darker.min.css">
 
+    <!-- Diff2Html for visual diff display -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/diff2html@3.4.47/bundles/css/diff2html.min.css">
+
 
 
     <style>
@@ -855,6 +858,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/shell/shell.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
+    <!-- Diff library for conflict resolution -->
+    <script src="https://cdn.jsdelivr.net/npm/diff@5.1.0/dist/diff.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/diff2html@3.4.47/bundles/js/diff2html-ui.min.js"></script>
+
     <script>
         function updateRadiusStatus() {
 
@@ -895,6 +902,7 @@
                 });
         }
         let currentPath = "";
+        let currentMtime = null;  // Track file modification time for conflict detection
 
         let currentMode = "view";
 
@@ -928,6 +936,7 @@
                 .then(data => {
                     editor.setValue(data.content);
                     currentPath = data.path;
+                    currentMtime = data.mtime;  // Track when file was loaded
                     document.getElementById('currentFilePath').textContent = `/etc/freeradius/3.0/${currentPath}`;
                     document.querySelectorAll('.file-item').forEach(i => i.classList.remove('active'));
                     el.classList.add('active');
@@ -1155,7 +1164,7 @@
             }
         }
 
-        function saveFile() {
+        function saveFile(forceSave = false) {
             const fileName = currentPath.split('/').pop();
 
             // Trigger the Save themed toast with highlighted filename
@@ -1165,11 +1174,26 @@
                 fetch('/save', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ filepath: currentPath, content: editor.getValue() })
+                    body: JSON.stringify({
+                        filepath: currentPath,
+                        content: editor.getValue(),
+                        mtime: currentMtime,  // Send the mtime we have
+                        force: forceSave  // Allow forcing save
+                    })
                 })
-                    .then(res => res.json())
+                    .then(res => {
+                        // Check for conflict (409 status)
+                        if (res.status === 409) {
+                            return res.json().then(data => {
+                                handleSaveConflict(data);
+                                throw new Error('Conflict detected'); // Stop further processing
+                            });
+                        }
+                        return res.json();
+                    })
                     .then(data => {
                         if (data.status === 'success') {
+                            currentMtime = data.mtime;  // Update mtime after successful save
                             showToast('Saved Successfully', `<strong style="color: #059669; font-weight: 700;">${fileName}</strong> has been saved and FreeRADIUS restarted successfully.`, 'success');
                         } else {
                             // Show the error message sent from your Python backend!
@@ -1177,10 +1201,389 @@
                         }
                     })
                     .catch(error => {
-                        showToast('Connection Error', "Network error or server is unreachable.", 'error');
+                        if (error.message !== 'Conflict detected') {
+                            showToast('Connection Error', "Network error or server is unreachable.", 'error');
+                        }
                     });
 
             });
+        }
+
+        function handleSaveConflict(conflictData) {
+            // Close any open toasts first to prevent continuous display
+            if (toastInstance) {
+                toastInstance.hide();
+            }
+
+            const fileName = currentPath.split('/').pop();
+            const myContent = editor.getValue();
+            const diskContent = conflictData.disk_content;
+
+            // Generate unified diff using Diff library
+            const diff = Diff.createTwoFilesPatch(
+                `${fileName} (Disk/SSH)`,
+                `${fileName} (Your UI Changes)`,
+                diskContent,
+                myContent,
+                'Current on disk',
+                'Your edits'
+            );
+
+            // Perform smart 3-way merge
+            const mergedContent = performSmartMerge(diskContent, myContent);
+            const hasMergeConflicts = mergedContent.includes('<<<<<<<') || mergedContent.includes('>>>>>>>');
+
+            // Create a custom conflict resolution modal with diff view
+            const conflictModal = document.createElement('div');
+            conflictModal.innerHTML = `
+                <div class="modal fade show" id="conflictModal" tabindex="-1" style="display: block; background: rgba(0,0,0,0.5);">
+                    <div class="modal-dialog modal-fullscreen">
+                        <div class="modal-content" style="border-radius: 0; box-shadow: 0 8px 32px rgba(0,0,0,0.2);">
+                            <div class="modal-header" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none;">
+                                <div>
+                                    <h5 class="modal-title fw-bold mb-1">
+                                        ⚠️ Merge Conflict Detected
+                                    </h5>
+                                    <small class="opacity-75">File: ${fileName}</small>
+                                </div>
+                                <button type="button" class="btn-close btn-close-white" onclick="closeConflictModal()"></button>
+                            </div>
+                            <div class="modal-body p-0" style="background: #f8f9fa; overflow: auto;">
+                                <div class="alert alert-warning m-3 mb-2" style="border-left: 4px solid #f59e0b;">
+                                    <div class="d-flex align-items-start">
+                                        <div class="flex-grow-1">
+                                            <strong>⚠️ Warning:</strong> The file <strong>${fileName}</strong> was modified externally (e.g., via SSH) while you were editing it.
+                                            <br><small class="text-muted">Review the changes below and choose how to resolve:</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Tab Navigation with Strong Visual Indicators -->
+                                <ul class="nav nav-tabs px-3" role="tablist" style="background: #f8f9fa; border-bottom: 3px solid #dee2e6;">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active fw-bold px-4 py-3" id="diff-tab" data-bs-toggle="tab" data-bs-target="#diffView" type="button">
+                                            <span class="d-flex align-items-center gap-2">
+                                                <span style="font-size: 20px;">🔍</span>
+                                                <span>Visual Diff (Changes Only)</span>
+                                            </span>
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link fw-bold px-4 py-3" id="merge-tab" data-bs-toggle="tab" data-bs-target="#mergeView" type="button">
+                                            <span class="d-flex align-items-center gap-2">
+                                                <span style="font-size: 20px;">🔀</span>
+                                                <span>Smart Merged Result ${hasMergeConflicts ? '<span class="text-danger ms-1">(⚠️ Has Conflicts)</span>' : '<span class="text-success ms-1">(✅ Clean)</span>'}</span>
+                                            </span>
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link fw-bold px-4 py-3" id="side-tab" data-bs-toggle="tab" data-bs-target="#sideView" type="button">
+                                            <span class="d-flex align-items-center gap-2">
+                                                <span style="font-size: 20px;">📋</span>
+                                                <span>Side-by-Side (Full Files)</span>
+                                            </span>
+                                        </button>
+                                    </li>
+                                </ul>
+
+                                <style>
+                                    /* Active tab - light blue glass-like theme */
+                                    #conflictModal .nav-link.active {
+                                        color: #1e40af !important;
+                                        background: linear-gradient(135deg,
+                                            rgba(219, 234, 254, 0.95) 0%,
+                                            rgba(191, 219, 254, 0.90) 100%) !important;
+                                        border: 2px solid rgba(96, 165, 250, 0.4) !important;
+                                        border-bottom: none !important;
+                                        border-radius: 10px 10px 0 0 !important;
+                                        box-shadow:
+                                            0 -4px 12px rgba(59, 130, 246, 0.15),
+                                            inset 0 1px 2px rgba(255, 255, 255, 0.8) !important;
+                                        backdrop-filter: blur(10px);
+                                        transform: translateY(2px);
+                                        position: relative;
+                                        z-index: 10;
+                                        font-weight: 700 !important;
+                                    }
+
+                                    /* Inactive tabs - muted */
+                                    #conflictModal .nav-link:not(.active) {
+                                        color: #6b7280 !important;
+                                        background: rgba(249, 250, 251, 0.6) !important;
+                                        border: 1px solid #e5e7eb !important;
+                                        border-bottom: none !important;
+                                        border-radius: 8px 8px 0 0 !important;
+                                        margin-right: 4px;
+                                        font-weight: 600 !important;
+                                    }
+
+                                    /* Hover effect for inactive tabs */
+                                    #conflictModal .nav-link:hover:not(.active) {
+                                        color: #374151 !important;
+                                        background: rgba(243, 244, 246, 0.8) !important;
+                                        border-color: #d1d5db !important;
+                                    }
+
+                                    /* Remove default Bootstrap tab styling */
+                                    #conflictModal .nav-tabs {
+                                        border-bottom: none !important;
+                                    }
+                                </style>
+
+                                <!-- Tab Content -->
+                                <div class="tab-content" style="background: white;">
+                                    <!-- Visual Diff View -->
+                                    <div class="tab-pane fade show active p-3" id="diffView">
+                                        <div id="diffOutput" style="background: white; border-radius: 8px; overflow: auto; max-height: calc(100vh - 280px);"></div>
+                                    </div>
+
+                                    <!-- Smart Merge Preview -->
+                                    <div class="tab-pane fade p-3" id="mergeView">
+                                        ${hasMergeConflicts ? `
+                                        <div class="alert alert-danger" style="border-left: 4px solid #dc2626;">
+                                            <strong>⚠️ Conflicts Detected:</strong> The automated merge found overlapping changes that require manual resolution.
+                                            <br><small class="text-muted">Lines marked with &lt;&lt;&lt;&lt;&lt;&lt;&lt;, =======, and &gt;&gt;&gt;&gt;&gt;&gt;&gt; show conflicting sections.</small>
+                                        </div>
+                                        ` : `
+                                        <div class="alert alert-success" style="border-left: 4px solid #059669;">
+                                            <strong>✅ Merge Successful:</strong> Both sets of changes were combined automatically with no conflicts.
+                                            <br><small class="text-muted">Review the merged content below before saving.</small>
+                                        </div>
+                                        `}
+                                        <div class="card">
+                                            <div class="card-header bg-light border-bottom fw-bold text-dark">
+                                                📄 Merged File Content Preview
+                                            </div>
+                                            <div class="card-body p-0">
+                                                <textarea id="mergedContentPreview" readonly class="form-control border-0" style="font-family: 'JetBrains Mono', monospace; font-size: 13px; height: calc(100vh - 340px); resize: none; white-space: pre;">${mergedContent}</textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Side-by-Side View -->
+                                    <div class="tab-pane fade p-3" id="sideView">
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <div class="card h-100" style="border: 2px solid #10b981;">
+                                                    <div class="card-header bg-success text-white fw-bold">
+                                                        💾 Current Version (Disk/SSH)
+                                                    </div>
+                                                    <div class="card-body p-0">
+                                                        <textarea readonly class="form-control border-0" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; height: calc(100vh - 280px); resize: none; white-space: pre;">${diskContent}</textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="card h-100" style="border: 2px solid #3b82f6;">
+                                                    <div class="card-header bg-primary text-white fw-bold">
+                                                        📝 Your Changes (UI)
+                                                    </div>
+                                                    <div class="card-body p-0">
+                                                        <textarea readonly class="form-control border-0" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; height: calc(100vh - 280px); resize: none; white-space: pre;">${myContent}</textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer justify-content-between" style="background: #f8f9fa; border-top: 2px solid #dee2e6;">
+                                <button type="button" class="btn btn-secondary px-4" onclick="closeConflictModal()">
+                                    ❌ Cancel
+                                </button>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-success px-4" onclick="resolveConflict('disk')" title="Discard your changes and use the version from disk">
+                                        💾 Use Disk Version Only
+                                    </button>
+                                    <button type="button" class="btn btn-primary px-4" onclick="resolveConflict('merge')" title="Intelligently merge both versions (RECOMMENDED)">
+                                        🔀 Smart Merge Both Changes ⭐
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(conflictModal);
+
+            // Render the diff using diff2html
+            setTimeout(() => {
+                const diffContainer = document.getElementById('diffOutput');
+                if (diffContainer) {
+                    const diff2htmlUi = new Diff2HtmlUI(diffContainer, diff, {
+                        drawFileList: false,
+                        matching: 'lines',
+                        outputFormat: 'side-by-side',
+                        highlightCode: true,
+                        renderNothingWhenEmpty: false
+                    });
+                    diff2htmlUi.draw();
+                }
+            }, 100);
+
+            // Store conflict data for resolution
+            window.conflictData = {
+                myContent: myContent,
+                diskContent: diskContent,
+                mergedContent: mergedContent,
+                diskMtime: conflictData.disk_mtime
+            };
+        }
+
+        // Smart merge function that attempts to combine both changes
+        function performSmartMerge(diskContent, myContent) {
+            const diskLines = diskContent.split('\n');
+            const myLines = myContent.split('\n');
+
+            // Use the diff library to compute line-by-line differences
+            const changes = Diff.diffLines(diskContent, myContent);
+
+            let mergedLines = [];
+            let diskIndex = 0;
+            let myIndex = 0;
+
+            changes.forEach(change => {
+                if (!change.added && !change.removed) {
+                    // Unchanged lines - keep them
+                    const lines = change.value.split('\n');
+                    if (lines[lines.length - 1] === '') lines.pop(); // Remove empty last element
+                    mergedLines.push(...lines);
+                    diskIndex += lines.length;
+                    myIndex += lines.length;
+                } else if (change.removed && !change.added) {
+                    // Lines only in disk version (removed in my version)
+                    // Keep disk version as it's the newer external change
+                    const lines = change.value.split('\n');
+                    if (lines[lines.length - 1] === '') lines.pop();
+                    mergedLines.push(...lines);
+                    diskIndex += lines.length;
+                } else if (change.added && !change.removed) {
+                    // Lines only in my version (my additions)
+                    const lines = change.value.split('\n');
+                    if (lines[lines.length - 1] === '') lines.pop();
+                    mergedLines.push(...lines);
+                    myIndex += lines.length;
+                }
+            });
+
+            // Now perform a 3-way merge to detect real conflicts
+            const conflicts = [];
+            const finalMerged = [];
+
+            // Re-compute with better conflict detection
+            const patches = Diff.structuredPatch(
+                'base', 'merged',
+                diskContent, myContent,
+                '', '', { context: 3 }
+            );
+
+            // If there are overlapping changes in the same region, mark as conflict
+            let hasConflicts = false;
+            const hunks = patches.hunks || [];
+
+            if (hunks.length > 0) {
+                // Check if changes overlap (simplified conflict detection)
+                const diskChanges = new Set();
+                const myChanges = new Set();
+
+                hunks.forEach(hunk => {
+                    hunk.lines.forEach((line, idx) => {
+                        if (line.startsWith('-')) {
+                            diskChanges.add(hunk.oldStart + idx);
+                        } else if (line.startsWith('+')) {
+                            myChanges.add(hunk.newStart + idx);
+                        }
+                    });
+                });
+
+                // Check for overlap
+                const diskArr = Array.from(diskChanges);
+                const myArr = Array.from(myChanges);
+
+                // If changes are in completely different areas, auto-merge
+                // Otherwise, show conflict markers
+                const maxDisk = Math.max(...diskArr, 0);
+                const minMy = Math.min(...myArr, Infinity);
+                const minDisk = Math.min(...diskArr, Infinity);
+                const maxMy = Math.max(...myArr, 0);
+
+                hasConflicts = (minDisk <= maxMy && minMy <= maxDisk);
+            }
+
+            if (hasConflicts) {
+                // Create conflict markers for manual resolution
+                return `<<<<<<< Your Changes (UI)\n${myContent}\n=======\n${diskContent}\n>>>>>>> Disk Version (SSH)`;
+            } else {
+                // Safe auto-merge: combine both sets of changes
+                return mergedLines.join('\n');
+            }
+        }
+
+        function closeConflictModal() {
+            const modal = document.getElementById('conflictModal');
+            if (modal) {
+                modal.parentElement.remove();
+            }
+            window.conflictData = null;
+        }
+
+        function resolveConflict(choice) {
+            if (!window.conflictData) return;
+
+            const fileName = currentPath.split('/').pop();
+
+            if (choice === 'disk') {
+                // Use disk version - reload the file
+                editor.setValue(window.conflictData.diskContent);
+                currentMtime = window.conflictData.diskMtime;
+                showToast('Conflict Resolved', `Loaded the current version of <strong style="color: #059669; font-weight: 700;">${fileName}</strong> from disk. Your changes were discarded.`, 'success');
+                closeConflictModal();
+
+            } else if (choice === 'merge') {
+                // Smart merge - combine both changes
+                const mergedContent = window.conflictData.mergedContent;
+                const hasConflicts = mergedContent.includes('<<<<<<<') || mergedContent.includes('>>>>>>>');
+
+                if (hasConflicts) {
+                    // Has conflicts - load into editor for manual resolution
+                    closeConflictModal();
+                    showToast('Manual Merge Required', 'The merge has conflicts. Please review the conflict markers (&lt;&lt;&lt;&lt;&lt;&lt;&lt;, =======, &gt;&gt;&gt;&gt;&gt;&gt;&gt;) in the editor and resolve them manually before saving.', 'info', () => {
+                        editor.setValue(mergedContent);
+                        showToast('Conflicts Loaded', 'Resolve the conflicts manually, then save the file.', 'info');
+                    });
+                } else {
+                    // Auto-merged successfully - save directly
+                    closeConflictModal();
+                    showToast('Save Merged Version', `Save the auto-merged version of <strong style="color: #059669; font-weight: 700;">${fileName}</strong>? Both sets of changes have been combined.`, 'save', () => {
+                        fetch('/save', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                filepath: currentPath,
+                                content: mergedContent,
+                                mtime: currentMtime,
+                                force: true  // Force save the merged version
+                            })
+                        })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.status === 'success') {
+                                    editor.setValue(mergedContent);
+                                    currentMtime = data.mtime;
+                                    showToast('Merged Successfully', `<strong style="color: #059669; font-weight: 700;">${fileName}</strong> has been saved with both sets of changes merged!`, 'success');
+                                } else {
+                                    showToast('Save Failed', data.message || "An unknown error occurred.", 'error');
+                                }
+                            })
+                            .catch(error => {
+                                showToast('Connection Error', "Network error or server is unreachable.", 'error');
+                            });
+                    });
+                }
+            }
+
+            window.conflictData = null;
         }
 
         function syncFile() {
@@ -1202,6 +1605,7 @@
                         showToast('Sync Failed', `Failed to reload file: ${data.error}`, 'error');
                     } else {
                         editor.setValue(data.content);
+                        currentMtime = data.mtime;  // Update mtime after sync
                         showToast('Synced Successfully', `<strong style="color: #059669; font-weight: 700;">${fileName}</strong> has been reloaded from disk.`, 'success');
                     }
                 })

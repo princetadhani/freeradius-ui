@@ -57,8 +57,16 @@ def get_file_content():
     try:
         # SECURE: Path traversal check
         full_path = get_safe_path(BASE_DIR, path)
+
+        # Get file modification time for conflict detection
+        mtime = os.path.getmtime(full_path)
+
         with open(full_path, 'r') as f:
-            return jsonify({"content": f.read(), "path": path})
+            return jsonify({
+                "content": f.read(),
+                "path": path,
+                "mtime": mtime  # Include modification timestamp
+            })
     except ValueError as ve:
         return jsonify({"error": str(ve)}), 403
     except Exception as e:
@@ -69,20 +77,39 @@ def save():
     data = request.get_json()
     path = data.get('filepath')
     content = data.get('content')
-    
+    client_mtime = data.get('mtime')  # Timestamp when file was loaded on client
+    force_save = data.get('force', False)  # Allow forcing save despite conflicts
+
     try:
         full_path = get_safe_path(BASE_DIR, path)
-        
+
+        # CONFLICT DETECTION: Check if file has been modified since client loaded it
+        if client_mtime is not None and not force_save:
+            current_mtime = os.path.getmtime(full_path)
+
+            # If file was modified externally (e.g., via SSH), warn the user
+            if current_mtime > client_mtime:
+                # Read the current content on disk
+                with open(full_path, 'r') as f:
+                    disk_content = f.read()
+
+                return jsonify({
+                    "status": "conflict",
+                    "message": "File was modified externally! Another user or process changed this file.",
+                    "disk_content": disk_content,
+                    "disk_mtime": current_mtime
+                }), 409  # 409 Conflict
+
         # 1. Write the file
         with open(full_path, 'w') as f:
             f.write(content)
 
         # 2. Run config test
         check = subprocess.run(["sudo", "freeradius", "-C"], capture_output=True, text=True)
-        
+
         if check.returncode != 0:
             error_output = check.stderr.lower()
-            
+
             # Check if the failure is actually a SUDO / Permission issue
             if "password is required" in error_output or "terminal is required" in error_output:
                 return jsonify({
@@ -100,7 +127,10 @@ def save():
 
         # 3. If test passes, restart service
         subprocess.run(["sudo", "systemctl", "restart", "freeradius"])
-        return jsonify({"status": "success"})
+
+        # Return new mtime for the client to track
+        new_mtime = os.path.getmtime(full_path)
+        return jsonify({"status": "success", "mtime": new_mtime})
 
     except Exception as e:
         return jsonify({"status": "error", "message": f"Server Error: {str(e)}"}), 500
