@@ -834,8 +834,14 @@
                         <div id="modeIndicator"><span class="text-success">👁 Mode: VIEW</span></div>
                     </div>
 
-                    <button id="saveBtn" class="btn btn-success btn-sm d-none" onclick="saveFile()">Save &
-                        Restart</button>
+                    <div class="d-flex gap-2 align-items-center">
+                        <button id="syncBtn" class="btn btn-primary btn-sm d-none" onclick="syncFile()"
+                            title="Reload file from disk">
+                            🔄 Sync
+                        </button>
+                        <button id="saveBtn" class="btn btn-success btn-sm d-none" onclick="saveFile()">Save &
+                            Restart</button>
+                    </div>
 
                 </div>
             </main>
@@ -1022,6 +1028,10 @@
             document.getElementById('saveBtn')
                 .classList.toggle('d-none', !isEdit || !currentPath);
 
+            // Show sync button in both modes when a file is loaded
+            document.getElementById('syncBtn')
+                .classList.toggle('d-none', !currentPath);
+
             document.getElementById('modeIndicator').innerHTML =
                 isEdit
                     ? '<span class="text-danger">✏️ Mode: EDIT</span>'
@@ -1171,6 +1181,33 @@
                     });
 
             });
+        }
+
+        function syncFile() {
+            if (!currentPath) {
+                showToast('No File Selected', 'Please select a file first to sync.', 'info');
+                return;
+            }
+
+            const fileName = currentPath.split('/').pop();
+
+            // Show info toast
+            showToast('Syncing...', `Reloading <strong style="color: #2563eb; font-weight: 700;">${fileName}</strong> from disk...`, 'info');
+
+            // Reload the file content from server
+            fetch(`/get_file_content?path=${currentPath}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) {
+                        showToast('Sync Failed', `Failed to reload file: ${data.error}`, 'error');
+                    } else {
+                        editor.setValue(data.content);
+                        showToast('Synced Successfully', `<strong style="color: #059669; font-weight: 700;">${fileName}</strong> has been reloaded from disk.`, 'success');
+                    }
+                })
+                .catch(error => {
+                    showToast('Connection Error', "Network error or server is unreachable.", 'error');
+                });
         }
 
 
