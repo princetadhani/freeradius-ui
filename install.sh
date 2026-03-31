@@ -56,16 +56,17 @@ sudo usermod -aG $RADIUS_GROUP $APP_USER
 # -------------------------------------------------
 echo "🔐 Setting secure group permissions..."
 
-# Create CoA directory
+# Create CoA directory with proper ownership
 sudo mkdir -p /etc/freeradius/3.0/coa
+sudo chown freerad:$RADIUS_GROUP /etc/freeradius/3.0/coa
 
-# Give the FreeRADIUS group ownership of the entire config tree
-sudo chown -R root:$RADIUS_GROUP /etc/freeradius/3.0
+# IMPORTANT: Keep freerad:freerad ownership (DO NOT change to root)
+# This maintains FreeRADIUS's native security model where the service owns its configs
 
-# Allow the group to write to ALL directories (to create new files) EXCEPT certs
+# Allow the group to WRITE to ALL directories (enables UI to create/delete files) EXCEPT certs
 sudo find /etc/freeradius/3.0 -type d -not -path "*/certs*" -exec chmod 775 {} +
 
-# Allow the group to write to ALL files (to edit existing files) EXCEPT certs
+# Allow the group to WRITE to ALL files (enables UI to edit configs) EXCEPT certs
 sudo find /etc/freeradius/3.0 -type f -not -path "*/certs*" -exec chmod 664 {} +
 
 # Let the UI read the logs natively
